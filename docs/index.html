@@ -20,7 +20,6 @@ h1{font-size:30px;margin:0 0 4px;letter-spacing:.5px}
 h1 .pick{color:var(--gold)}
 .sub{color:var(--muted);font-size:14px;margin:0}
 .tag2{color:var(--ember);font-size:12px;margin:6px 0 0;letter-spacing:.4px}
-
 .intro{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin:0 0 18px}
 .intro h2{margin:0 0 8px;font-size:15px;color:var(--gold);letter-spacing:.3px}
 .intro p{margin:0 0 10px;font-size:13.5px;line-height:1.6;color:var(--ink)}
@@ -28,9 +27,7 @@ h1 .pick{color:var(--gold)}
 .intro b{color:var(--gold)}
 .stack{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
 .stack span{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:3px 10px;font-size:11.5px;color:var(--muted)}
-
-.hud{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:0 0 14px;
-  position:sticky;top:10px;z-index:5;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.hud{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:0 0 14px;position:sticky;top:10px;z-index:5;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 .hud .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
 .rank{font-size:20px;font-weight:700;color:var(--gold)}
 .xpnum{color:var(--muted);font-size:13px}
@@ -38,39 +35,30 @@ h1 .pick{color:var(--gold)}
 .fill{height:100%;width:0;background:linear-gradient(90deg,var(--ore),var(--gold),var(--ember));transition:width .5s ease}
 .next{font-size:12px;color:var(--muted);margin-top:8px}
 .controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
-.controls button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:8px;
-  padding:6px 12px;font-size:12px;cursor:pointer}
+.controls button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:12px;cursor:pointer}
 .controls button:hover{color:var(--ink);border-color:var(--gold)}
 .savestate{font-size:11.5px;color:var(--muted);margin-top:10px}
 .savewarn{font-size:12px;color:#ffb4a0;background:rgba(255,90,60,.10);border:1px solid rgba(255,90,60,.4);border-radius:8px;padding:8px 10px;margin-top:8px}
-
 .techmap{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 22px}
 .techmap h3{margin:0 0 4px;font-size:14px;color:var(--gold)}
 .techmap .cap{margin:0 0 12px;font-size:12px;color:var(--muted)}
 .techgrid{display:flex;flex-wrap:wrap;gap:8px}
-.techchip{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
-  border-radius:10px;padding:6px 11px;font-size:12.5px;color:var(--muted);opacity:.65;transition:all .3s}
-.techchip .dot{width:14px;height:14px;border-radius:50%;border:2px dashed var(--lock);flex:0 0 auto;
-  display:grid;place-items:center;font-size:9px;color:#120e0a;font-weight:800}
+.techchip{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:6px 11px;font-size:12.5px;color:var(--muted);opacity:.65;transition:all .3s}
+.techchip .dot{width:14px;height:14px;border-radius:50%;border:2px dashed var(--lock);flex:0 0 auto;display:grid;place-items:center;font-size:9px;color:#120e0a;font-weight:800}
 .techchip.learned{opacity:1;color:var(--ink);border-color:var(--gold);background:rgba(232,178,58,.10)}
 .techchip.learned .dot{background:var(--gold);border:2px solid var(--gold)}
 .techchip a{color:inherit}
 .techchip .q{font-size:10px;color:var(--muted);opacity:.8}
-
-.quest{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden;
-  transition:border-color .2s, opacity .3s}
+.quest{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden;transition:border-color .2s, opacity .3s}
 .quest.locked{opacity:.55}
 .quest.done{border-color:var(--green)}
 .qhead{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer}
-.chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--lock);flex:0 0 auto;display:grid;place-items:center;
-  font-size:15px;font-weight:700;color:#120e0a;background:transparent}
+.chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--lock);flex:0 0 auto;display:grid;place-items:center;font-size:15px;font-weight:700;color:#120e0a;background:transparent}
 .quest.done .chk{background:var(--green);border-color:var(--green)}
 .quest.locked .chk{border-style:dashed}
 .qmeta{flex:1;min-width:0}
 .qtitle{font-size:16px;font-weight:650;margin:0}
 .qtag{font-size:12px;color:var(--muted);margin-top:2px}
-.badge{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;padding:2px 7px;border-radius:20px;margin-left:6px;vertical-align:middle}
-.badge.draft{background:rgba(255,138,61,.15);color:var(--ember);border:1px solid rgba(255,138,61,.5)}
 .qxp{font-size:12px;color:var(--gold);white-space:nowrap}
 .caret{color:var(--muted);transition:transform .2s}
 .quest.open .caret{transform:rotate(90deg)}
@@ -80,8 +68,8 @@ h1 .pick{color:var(--gold)}
 .qbody p,.qbody li{font-size:14px;line-height:1.55;color:var(--ink)}
 .qbody ol,.qbody ul{margin:6px 0;padding-left:20px}
 .qbody .concepts{color:var(--muted);font-size:13px}
-.draftnote{background:rgba(255,138,61,.08);border:1px solid rgba(255,138,61,.35);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--ember)}
 .milestone{background:rgba(125,214,107,.10);border:1px solid rgba(125,214,107,.35);border-radius:10px;padding:10px 12px;font-size:14px}
+.after{background:rgba(111,177,201,.09);border:1px solid rgba(111,177,201,.32);border-radius:10px;padding:10px 12px;font-size:14px;font-style:italic}
 .card{background:var(--panel2);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--muted)}
 .reward{background:rgba(232,178,58,.09);border:1px solid rgba(232,178,58,.35);border-radius:10px;padding:10px 12px;font-size:14px}
 .opt{background:rgba(111,177,201,.08);border:1px solid rgba(111,177,201,.3);border-radius:10px;padding:9px 12px;font-size:13px;margin:6px 0}
@@ -96,9 +84,7 @@ h1 .pick{color:var(--gold)}
 .assetbox h3{margin:0 0 6px;font-size:14px;color:var(--gold)}
 .assetbox p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
 .footer{text-align:center;color:var(--muted);font-size:12px;margin-top:28px}
-.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(120px);
-  background:var(--gold);color:#241a00;font-weight:700;padding:12px 20px;border-radius:12px;
-  box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .4s cubic-bezier(.2,1.4,.4,1);z-index:20;max-width:90%}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(120px);background:var(--gold);color:#241a00;font-weight:700;padding:12px 20px;border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .4s cubic-bezier(.2,1.4,.4,1);z-index:20;max-width:90%}
 .toast.show{transform:translateX(-50%) translateY(0)}
 </style>
 </head>
@@ -112,8 +98,8 @@ h1 .pick{color:var(--gold)}
 
   <div class="intro">
     <h2>📜 About this quest line</h2>
-    <p>You'll build <b>one complete game</b> across a series of bite-sized quests — each a single 30–60 minute sitting that ends with a visible change on screen. The game, <b>Deep Delve</b>, is an idle/incremental miner set in a Synty dwarven mine: you <b>click a rock face</b> to chip its HP, and when it breaks it <b>bursts into coins</b> you sweep up with the mouse. Spend those coins in a <b>tech tree</b> to sharpen your pickaxe, buy better picks, <b>hire animated dwarves</b> who mine alongside you, and <b>descend</b> to tougher, richer rock. The goal is depth — how far down can you dig?</p>
-    <p>You start in <b>Blueprints</b> (Unreal's visual scripting) for fast wins, then pivot to <b>C++</b> once the systems are real — the same journey a professional Unreal programmer takes. Architecture is a first-class citizen here: the player's damage lives on the Player Controller, rocks and pickaxes are Data Assets, clicks travel through a Blueprint Interface, and every upgrade flows through one data-driven tech tree. Each quest lists exactly which Unreal technology it teaches, with links to the official docs.</p>
+    <p>You'll build <b>one complete game</b> across 17 bite-sized quests — each a single 30–60 minute sitting that ends with a visible change on screen. <b>Deep Delve</b> is an idle/incremental miner in a Synty dwarven mine: you <b>click a rock face</b> to chip its HP, and when it breaks it <b>bursts into coins</b>. Spend them in a <b>tech tree</b> to sharpen and auto-swing your pickaxe, land critical hits, <b>hire animated dwarves</b> who mine and collect coins for you, upgrade your crew and veins, and <b>descend</b> to tougher, richer rock.</p>
+    <p>You start in <b>Blueprints</b> for fast wins, then pivot to <b>C++</b> once the systems are real. Architecture is first-class: the player's damage lives on the Player Controller, rocks/pickaxes/miners are Data Assets, clicks travel through a Blueprint Interface, and every upgrade flows through one data-driven tech tree. You even <b>ship a playable demo</b> to a friend at Quest 11, well before the finish. Each quest lists exactly which Unreal technology it teaches, with links to the official docs.</p>
     <div class="stack" id="stack"></div>
   </div>
 
@@ -148,327 +134,303 @@ h1 .pick{color:var(--gold)}
 
   <div id="quests"></div>
 
-  <div class="footer">Quests 1–8 are fully refined; 9–12 are drafts still being designed. Your progress is saved in this browser on this device and survives shutdowns; use Export/Import to move it. Docs open on dev.epicgames.com.</div>
+  <div class="footer">All 17 quests refined. Your progress is saved in this browser on this device and survives shutdowns; use Export/Import to move it between devices. Docs open on dev.epicgames.com.</div>
 </div>
 <div class="toast" id="toast"></div>
 
 <script>
 const RANKS=[[0,"Prospector"],[100,"Pit Digger"],[350,"Miner"],[750,"Pit Foreman"],[1300,"Master Smith"],[2000,"Deeplord"]];
-
-// Canonical Unreal Engine 5.8 documentation (dev.epicgames.com), verified July 2026.
 const D="https://dev.epicgames.com/documentation/en-us/unreal-engine/";
 const DOCS={
-  editor:      D+"unreal-engine-5-8-documentation",
-  fab:         D+"fab-window-in-unreal-engine",
-  umg:         D+"creating-user-interfaces-with-umg-and-slate-in-unreal-engine",
-  widgetBP:    D+"widget-blueprints-in-umg-for-unreal-engine",
-  umgAnim:     D+"animating-umg-widgets-in-unreal-engine",
-  widgetComp:  D+"widget-components-in-unreal-engine",
-  framework:   D+"gameplay-framework-in-unreal-engine",
-  bp:          D+"blueprints-visual-scripting-in-unreal-engine",
-  bpIntro:     D+"introduction-to-blueprints-visual-scripting-in-unreal-engine",
-  enhancedInput: D+"enhanced-input-in-unreal-engine",
-  bpInterface: D+"blueprint-interface-in-unreal-engine",
-  dispatchers: D+"event-dispatchers-in-unreal-engine",
-  timers:      D+"gameplay-timers-in-unreal-engine",
-  dataAssets:  D+"data-assets-in-unreal-engine",
-  animSeq:     D+"animation-sequences-in-unreal-engine",
-  animNotify:  D+"animation-notifies-in-unreal-engine",
-  savegame:    D+"saving-and-loading-your-game-in-unreal-engine",
-  cppQuick:    D+"unreal-engine-cpp-quick-start",
-  cpp:         D+"programming-with-cplusplus-in-unreal-engine",
-  subsystems:  D+"programming-subsystems-in-unreal-engine",
-  liveCoding:  D+"using-live-coding-to-recompile-unreal-engine-applications-at-runtime",
-  datetime:    D+"API/Runtime/Core/Misc/FDateTime",
-  niagara:     D+"getting-started-in-niagara-effects-for-unreal-engine",
-  soundCue:    D+"sound-cues-in-unreal-engine",
-  packaging:   D+"packaging-your-project",
-  incremental: "https://en.wikipedia.org/wiki/Incremental_game"
+  editor:D+"unreal-engine-5-8-documentation", fab:D+"fab-window-in-unreal-engine",
+  umg:D+"creating-user-interfaces-with-umg-and-slate-in-unreal-engine", widgetBP:D+"widget-blueprints-in-umg-for-unreal-engine",
+  umgAnim:D+"animating-umg-widgets-in-unreal-engine", widgetComp:D+"widget-components-in-unreal-engine",
+  framework:D+"gameplay-framework-in-unreal-engine", bp:D+"blueprints-visual-scripting-in-unreal-engine",
+  bpIntro:D+"introduction-to-blueprints-visual-scripting-in-unreal-engine", enhancedInput:D+"enhanced-input-in-unreal-engine",
+  bpInterface:D+"blueprint-interface-in-unreal-engine", dispatchers:D+"event-dispatchers-in-unreal-engine",
+  timers:D+"gameplay-timers-in-unreal-engine", dataAssets:D+"data-assets-in-unreal-engine",
+  animSeq:D+"animation-sequences-in-unreal-engine", animNotify:D+"animation-notifies-in-unreal-engine",
+  audio:D+"audio-engine-overview-in-unreal-engine", soundCue:D+"sound-cues-in-unreal-engine",
+  collision:D+"collision-in-unreal-engine---overview", savegame:D+"saving-and-loading-your-game-in-unreal-engine",
+  cppQuick:D+"unreal-engine-cpp-quick-start", cpp:D+"programming-with-cplusplus-in-unreal-engine",
+  subsystems:D+"programming-subsystems-in-unreal-engine", niagara:D+"getting-started-in-niagara-effects-for-unreal-engine",
+  packaging:D+"packaging-your-project", incremental:"https://en.wikipedia.org/wiki/Incremental_game"
 };
 
 const QUESTS=[
  {n:1,t:"First Light",tag:"~50–60 min · Setup, import & scene",xp:100,
   brief:"Install Unreal, create the project, import the Synty pack, and compose your first scene: a small mine, a dwarf, and a static camera framing the shot.",
-  tech:[
-    {name:"Unreal Editor & Projects",what:"The tool you build everything in: Viewport, Content Browser, Play-In-Editor.",doc:DOCS.editor},
-    {name:"Importing assets via Fab",what:"How the Synty POLYGON pack gets into your project — the Fab window.",doc:DOCS.fab}
-  ],
-  steps:["Install Epic Launcher → UE 5.8. New Blank Blueprint project, Starter Content off.",
-    "Import POLYGON Dungeon Realms via the Fab window.",
-    "Learn editor navigation (right-drag + WASD, Content Browser, Outliner, Details, Play/Stop).",
-    "New level: build a small mine from Synty tiles, place a dwarf, add a light. Save as 'Mine'.",
-    "Add a Camera Actor framing the shot; set Auto Activate for Player 0 so Play views through it."],
-  milestone:"Two things true: (1) editor + Synty imported; (2) your own scene — mine, dwarf, static camera — renders when you press Play.",
-  boss:"Search the Content Drawer and find the dwarf miner and a forge prop by name.",
-  reward:"Title Prospector · +100 XP · ☕ Coffee.",
-  opt:[{n:"Living mine",d:"Make the dwarf animated (idle/sit loop via an Animation Sequence, or a small walking patrol).",doc:DOCS.animSeq}],
-  card:"Editor · Blank project · Fab import · placing Actors · Camera Actor · Auto Activate · PIE"},
+  tech:[{name:"Unreal Editor & Projects",what:"The tool you build in: Viewport, Content Browser, Play-In-Editor.",doc:DOCS.editor},
+        {name:"Importing assets via Fab",what:"How the Synty POLYGON pack gets into your project.",doc:DOCS.fab}],
+  steps:["Install Epic Launcher → UE 5.8. New Blank Blueprint project, Starter Content off.","Import POLYGON Dungeon Realms via the Fab window.","Learn editor navigation (right-drag + WASD, Content Browser, Outliner, Details, Play/Stop).","New level: build a small mine from Synty tiles, place a dwarf + light, save as 'Mine'.","Add a Camera Actor framing the shot; Auto Activate for Player 0 so Play views through it."],
+  opt:[{n:"Living mine",d:"Animate the dwarf (idle/sit loop, or a small patrol).",doc:DOCS.animSeq}],
+  milestone:"Editor + Synty imported, and your own scene (mine + dwarf + static camera) renders when you press Play.",
+  boss:"Find the dwarf miner and a forge prop by name in the Content Drawer.",
+  reward:"Title Prospector · +100 XP · ☕",
+  card:"Editor · Blank project · Fab import · placing Actors · Camera Actor · PIE"},
 
  {n:2,t:"The First Strike",tag:"~40 min · Click, damage, respawn",xp:150,
-  brief:"Make the rock interactive: click it, its HP drops, and at 0 HP it's destroyed and a fresh rock spawns. An endless mine-one-get-another loop. No coins or depth yet.",
-  tech:[
-    {name:"Blueprint Actors",what:"The object type for interactive things — BP_OreVein holds the rock's mesh and HP.",doc:DOCS.bp},
-    {name:"Mouse click events (On Clicked)",what:"Make a world actor clickable via Enable Click Events on the Player Controller + the actor's On Clicked event.",doc:DOCS.bpIntro},
-    {name:"Spawn & Destroy Actor",what:"The actor lifecycle — destroy the broken rock and spawn its replacement.",doc:DOCS.bp}
-  ],
-  steps:["BP_OreVein: Static Mesh (Synty rock) + integer HP = 10 + collision.",
-    "Player Controller: Show Mouse Cursor + Enable Click Events.",
-    "Rock's On Clicked → HP - 1 → Branch HP <= 0 → Spawn new rock + Destroy self."],
+  brief:"Make the rock interactive: click it, HP drops, at 0 HP it's destroyed and a fresh rock spawns. No coins or depth yet.",
+  tech:[{name:"Blueprint Actors",what:"BP_OreVein holds the rock's mesh + HP.",doc:DOCS.bp},
+        {name:"Mouse click events (On Clicked)",what:"Enable Click Events + the actor's On Clicked make it clickable.",doc:DOCS.bpIntro},
+        {name:"Spawn & Destroy Actor",what:"Destroy the broken rock, spawn its replacement.",doc:DOCS.bp}],
+  steps:["BP_OreVein: Static Mesh (Synty rock) + integer HP = 10 + collision.","Player Controller: Show Mouse Cursor + Enable Click Events.","On Clicked → HP - 1 → Branch HP <= 0 → Spawn new rock + Destroy self."],
+  opt:[{n:"Pickaxe cursor",d:"Swap the cursor to a pickaxe on hover (On Begin/End Cursor Over).",doc:DOCS.bp},
+       {n:"Rock health bar",d:"A Widget Component on the rock with a Progress Bar bound to HP / MaxHP.",doc:DOCS.widgetComp}],
   milestone:"Click the rock ten times → it vanishes and a new one appears. Forever.",
-  boss:"Add a second 'power' button that removes 5 HP, sharing the same rock.",
-  reward:"Title Pit Digger · +150 XP · 🍪 Snack.",
-  opt:[{n:"Pickaxe cursor",d:"Swap the cursor to a pickaxe on hover using On Begin/End Cursor Over.",doc:DOCS.bp},
-       {n:"Rock health bar",d:"A Widget Component on the rock showing a Progress Bar bound to HP / MaxHP.",doc:DOCS.widgetComp}],
+  boss:"Add a second 'power' button that removes 5 HP.",
+  reward:"Title Pit Digger · +150 XP · 🍪",
   card:"Blueprint Actor · Static Mesh · Enable Click Events · On Clicked · Branch · Spawn/Destroy Actor"},
 
- {n:3,t:"Pick & Player",tag:"~45 min · Do it properly (refactor + juice)",xp:200,
-  brief:"Refactor: click power belongs to the player, not the rock. The Player Controller owns Damage, Enhanced Input registers the click, and a Blueprint Interface delivers the hit. Add floating damage numbers.",
-  tech:[
-    {name:"Player Controller",what:"Owns the player's Damage stat — the right home for the player's power.",doc:DOCS.framework},
-    {name:"Enhanced Input",what:"UE5's modern input system — an Input Action + Mapping Context registers the dig click.",doc:DOCS.enhancedInput},
-    {name:"Blueprint Interfaces",what:"BPI_Mineable's TakeDamage lets the controller hit any rock without knowing its class — and dwarves reuse it later.",doc:DOCS.bpInterface},
-    {name:"UMG animations (damage numbers)",what:"A widget that floats up and fades, spawned on each hit via World→Screen projection.",doc:DOCS.umgAnim}
-  ],
-  steps:["BP_MineController (Player Controller) with Damage = 1; set it in the GameMode.",
-    "Enhanced Input: IA_Dig (Left Mouse) in a Mapping Context, added on BeginPlay.",
-    "Blueprint Interface BPI_Mineable → TakeDamage(Amount).",
-    "On IA_Dig → Get Hit Result Under Cursor → send TakeDamage(Damage) to the hit actor.",
-    "BP_OreVein implements BPI_Mineable: TakeDamage → HP - Amount → spawn WBP_DamageNumber (float+fade, shows Amount) → break/respawn. Remove the temporary On Clicked."],
-  milestone:"Same loop, but click power now comes from the Player Controller via an event, and a '1' floats off the rock on every hit.",
-  boss:"Temporarily set Damage to 5 on the controller and confirm both the break speed and the popup change together.",
-  reward:"Title stays Pit Digger · +200 XP · 🎵 One song.",
+ {n:3,t:"Pick & Player",tag:"~50 min · Refactor + first sound",xp:200,
+  brief:"Click power belongs to the player, not the rock. The Player Controller owns Damage, Enhanced Input registers the click, a Blueprint Interface delivers the hit, floating damage numbers appear — and the first sounds land.",
+  tech:[{name:"Player Controller",what:"Owns the player's Damage stat.",doc:DOCS.framework},
+        {name:"Enhanced Input",what:"An Input Action + Mapping Context registers the dig click.",doc:DOCS.enhancedInput},
+        {name:"Blueprint Interfaces",what:"BPI_Mineable.TakeDamage hits any rock without knowing its class (dwarves reuse it later).",doc:DOCS.bpInterface},
+        {name:"UMG animations (damage numbers)",what:"A floating number via World→Screen projection.",doc:DOCS.umgAnim},
+        {name:"Audio — Play Sound 2D",what:"Minimal sound: import a .wav and Play Sound 2D on an event (reused across the game).",doc:DOCS.audio}],
+  steps:["BP_MineController (Player Controller) with Damage = 1; set it in the GameMode.","Enhanced Input: IA_Dig (Left Mouse) in a Mapping Context, added on BeginPlay.","Blueprint Interface BPI_Mineable → TakeDamage(Amount).","On IA_Dig → Get Hit Result Under Cursor → send TakeDamage(Damage) to the hit actor.","BP_OreVein implements it: HP - Amount → spawn WBP_DamageNumber → break/respawn. Remove the temporary On Clicked.","🔊 Import two short .wav files; Play Sound 2D on the hit (rock hit) and on the break (rock broken)."],
   opt:[],
-  card:"Player Controller · Enhanced Input (IA + Mapping Context) · Get Hit Result Under Cursor · Blueprint Interface · custom events · UMG animation · World→Screen"},
+  milestone:"Every hit lands with a sound and a floating '1', and the rock shatters with a crack — click power now comes from the Player Controller via an event.",
+  boss:"Set Damage to 5 and confirm break speed, popup, and the same hit sound all fire together.",
+  reward:"Title stays Pit Digger · +200 XP · 🎵",
+  card:"Player Controller · Enhanced Input · Get Hit Result Under Cursor · Blueprint Interface · UMG animation · Play Sound 2D"},
 
- {n:4,t:"Pay Dirt",tag:"~50–60 min · Coins, collecting & the HUD",xp:200,
-  brief:"The payoff. A destroyed rock bursts into ~10 coins that scatter; hover the mouse over them to collect. A GameInstance holds your Coins and Depth, shown on a new HUD.",
-  tech:[
-    {name:"GameInstance",what:"The economy's permanent home — Coins and Depth live here and survive level loads.",doc:DOCS.framework},
-    {name:"Physics impulse & spawn loops",what:"Spawn 10 coin actors in a loop and Add Impulse so they burst and scatter.",doc:DOCS.bp},
-    {name:"Cursor-over pickups",what:"On Begin Cursor Over collects a coin (needs Enable Mouse Over Events on the controller).",doc:DOCS.bp},
-    {name:"Event Dispatchers",what:"The GameInstance broadcasts OnCoinsChanged so the HUD refreshes without polling.",doc:DOCS.dispatchers}
-  ],
-  steps:["BP_Coin: coin mesh, collision, Simulate Physics; Add Impulse on spawn to scatter; On Begin Cursor Over → AddCoins(1) → destroy.",
-    "Player Controller: Enable Mouse Over Events.",
-    "BP_GameInstance (set in Project Settings) with Coins + Depth; BP_OreVein break → loop 10× spawn BP_Coin, Depth + 1, respawn.",
-    "WBP_HUD shows Coins + Depth; listens to OnCoinsChanged to refresh. Add a FormatNumber pure function for big values (1.2K)."],
-  milestone:"Break a rock → coins burst out → sweep the mouse over them → the Coins counter climbs, Depth ticks up.",
-  boss:"Confirm collecting a coin only credits once (destroyed on pickup) and the HUD matches the total.",
-  reward:"Title Miner · +200 XP · 🍕 Meal.",
-  opt:[{n:"Pickup juice",d:"Coin spin, a 'ching' Sound Cue, and a scale-pop on collect.",doc:DOCS.soundCue}],
-  card:"GameInstance · spawn loops · physics impulse · cursor-over pickups · Enable Mouse Over Events · Event Dispatchers · number formatting"},
+ {n:4,t:"Pay Dirt",tag:"~55 min · Coins, collecting & HUD",xp:200,
+  brief:"A destroyed rock bursts into ~10 coins that scatter; hover the mouse to collect them (with a 'ching'). A GameInstance holds Coins + Depth, shown on a new HUD.",
+  tech:[{name:"GameInstance",what:"The economy's permanent home — Coins and Depth live here and survive level loads.",doc:DOCS.framework},
+        {name:"Physics impulse & spawn loops",what:"Spawn 10 coins in a loop and Add Impulse so they burst.",doc:DOCS.bp},
+        {name:"Cursor-over pickups",what:"On Begin Cursor Over collects a coin (needs Enable Mouse Over Events).",doc:DOCS.bp},
+        {name:"Event Dispatchers",what:"The GameInstance broadcasts OnCoinsChanged so the HUD refreshes.",doc:DOCS.dispatchers}],
+  steps:["BP_Coin: mesh + collision + Simulate Physics; Add Impulse on spawn; On Begin Cursor Over → AddCoins(1) → destroy.","🔊 Play Sound 2D (coin pickup) on collect — reusing the audio skill from Q3.","Player Controller: Enable Mouse Over Events.","BP_GameInstance (set in Project Settings) with Coins + Depth; rock break spawns 10 coins, Depth + 1.","WBP_HUD shows Coins + Depth, listening to OnCoinsChanged; add a FormatNumber pure function (1.2K)."],
+  opt:[{n:"Pickup juice",d:"Coin spin and a scale-pop on collect.",doc:DOCS.umgAnim}],
+  milestone:"Break a rock → coins burst → sweep the mouse over them (ching!) → Coins climbs, Depth ticks up.",
+  boss:"Confirm a coin credits exactly once and the HUD matches the total.",
+  reward:"Title Miner · +200 XP · 🍕",
+  card:"GameInstance · spawn loops · physics impulse · cursor-over pickups · Event Dispatchers · number formatting · coin-pickup sound"},
 
  {n:5,t:"By the Book",tag:"~50 min · Data-driven rocks & pickaxes",xp:200,
-  brief:"Harden it: rocks and pickaxes become Data Assets, so a new rock or pickaxe is just a new data entry with a mesh and numbers — no graph edits.",
-  tech:[
-    {name:"Data Assets",what:"DA_RockData (Mesh, MaxHP, CoinReward) and DA_PickaxeData (Mesh, Damage, Speed) — content as data files.",doc:DOCS.dataAssets},
-    {name:"Data-driven design",what:"Separate stats (data) from behavior (Blueprints) so adding content means adding data, not code.",doc:DOCS.dataAssets}
-  ],
-  steps:["DA_RockData: Mesh, MaxHP, CoinReward. DA_PickaxeData: Mesh, Damage, Speed.",
-    "Make DA_CopperVein (HP 10, 10 coins) and DA_StonePick (Damage 1) — your current values, as data.",
-    "Refactor BP_OreVein to spawn from a RockData ref (mesh + HP = MaxHP; break spawns CoinReward coins).",
-    "Refactor BP_MineController to equip a PickaxeData (damage = Pickaxe.Damage + upgrades; store Speed).",
-    "Prove it: add DA_IronVein (25 HP, 30 coins) + DA_SturdyPick (Damage 3), swap refs, watch it work with no new nodes."],
-  milestone:"You create a brand-new rock type and pickaxe purely as Data Assets and drop them in — zero graph changes.",
+  brief:"Rocks and pickaxes become Data Assets, so new content is just data — no graph edits.",
+  tech:[{name:"Data Assets",what:"DA_RockData (Mesh, MaxHP, CoinReward) and DA_PickaxeData (Mesh, Damage, Speed).",doc:DOCS.dataAssets},
+        {name:"Data-driven design",what:"Separate stats (data) from behavior (Blueprints).",doc:DOCS.dataAssets}],
+  steps:["Define DA_RockData and DA_PickaxeData; make DA_CopperVein + DA_StonePick from current values.","Refactor BP_OreVein to spawn from a RockData ref (mesh + HP = MaxHP; break spawns CoinReward coins).","Refactor the controller to equip a PickaxeData (damage = Pickaxe.Damage + upgrades; store Speed).","Prove it: add DA_IronVein + DA_SturdyPick, swap refs, watch it work with no new nodes."],
+  opt:[{n:"Debug hot-swap",d:"A debug key to swap the equipped pickaxe at runtime.",doc:DOCS.bp}],
+  milestone:"Create a new rock type + pickaxe purely as Data Assets and drop them in — zero graph changes.",
   boss:"Add a third rock type in under two minutes, data only.",
-  reward:"Title stays Miner · +200 XP · 🚶 Walk.",
-  opt:[{n:"Debug hot-swap",d:"A debug key that swaps the equipped pickaxe at runtime.",doc:DOCS.bp}],
-  card:"Data Assets (PrimaryDataAsset) · asset/mesh references · separating data from behavior · refactoring for extensibility"},
+  reward:"Title stays Miner · +200 XP · 🚶",
+  card:"Data Assets · asset/mesh references · separating data from behavior · refactoring"},
 
  {n:6,t:"Tech Tree I — the System",tag:"~60 min · The upgrade data model",xp:300,
-  brief:"Design the general tech-tree data model that will drive every upgrade in the game — pickaxe, descend, hire crew, and all future nodes. Three nodes to start: Sharpen Pickaxe → Iron Pickaxe → Descend. Tested via temporary buttons.",
-  tech:[
-    {name:"Data Assets (tech nodes)",what:"DA_TechNode: NodeId, DisplayName, Description, Icon, Cost, Prerequisites, Effect, GridPosition, bRepeatable.",doc:DOCS.dataAssets},
-    {name:"Enumerations",what:"EffectType (UpgradePickaxe / EquipPickaxe / Descend / HireMiner…) drives a switch that applies each node.",doc:DOCS.bp},
-    {name:"Maps & data structures",what:"NodeLevels (Map of NodeId→level) is your whole progression state; Prerequisites are the graph edges.",doc:DOCS.bp},
-    {name:"Progression design (principle)",what:"Prerequisite gating + rising costs — the core of any upgrade tree.",doc:DOCS.incremental}
-  ],
-  steps:["DA_TechNode Data Asset with the fields above; Effect = EffectType enum + payload (EffectValue, TargetPickaxe, TargetRock).",
-    "On GameInstance: NodeLevels map. A node is available when all Prerequisites have level ≥ 1 and it isn't maxed.",
-    "Buy(node): gold ≥ cost (repeatable cost = Cost × Growth^level) → spend → level++ → ApplyEffect (switch on EffectType) → broadcast OnTechChanged.",
-    "Author 3 nodes: Sharpen Pickaxe (repeatable) → Iron Pickaxe (equip) → Descend (advance rock tier + camera drop).",
-    "Test with a temporary vertical list of buttons before building the real screen."],
-  milestone:"Buying the three nodes actually sharpens your pick, equips a new one, and descends to tougher/richer rock.",
-  boss:"Add a 4th node (e.g. a second descend) purely as data + one enum case; confirm prerequisites gate it.",
-  reward:"Title Pit Foreman · +300 XP · 🍕 Meal — this is the backbone of the whole game.",
+  brief:"Design the general tech-tree data model that drives every upgrade — pickaxe, descend, crew, and all future nodes. Three nodes to start: Sharpen Pickaxe → Iron Pickaxe → Descend. Tested via temporary buttons.",
+  tech:[{name:"Data Assets (tech nodes)",what:"DA_TechNode: NodeId, DisplayName, Description, Icon, Cost, Prerequisites, Effect, GridPosition, bRepeatable.",doc:DOCS.dataAssets},
+        {name:"Enumerations",what:"EffectType drives a switch that applies each node.",doc:DOCS.bp},
+        {name:"Maps & data structures",what:"NodeLevels (NodeId→level) is your whole progression state.",doc:DOCS.bp},
+        {name:"Progression design (principle)",what:"Prerequisite gating + rising costs.",doc:DOCS.incremental}],
+  steps:["DA_TechNode with Effect = EffectType enum + payload (EffectValue, TargetPickaxe, TargetRock).","NodeLevels map on the GameInstance; availability = all prerequisites ≥ 1 and not maxed.","Buy(node): gold ≥ cost (repeatable cost = Cost × Growth^level) → spend → level++ → apply-effect switch → broadcast OnTechChanged.","Author 3 nodes: Sharpen Pickaxe (repeatable) → Iron Pickaxe (equip) → Descend (advance tier + camera).","Test with a temporary vertical list of buttons."],
   opt:[],
-  card:"Data Assets · Enumerations · Maps · prerequisite graph · apply-effect switch · Event Dispatchers · cost scaling"},
+  milestone:"Buying the three nodes actually sharpens, equips, and descends to tougher/richer rock.",
+  boss:"Add a 4th node as data + one enum case; confirm prerequisites gate it.",
+  reward:"Title Pit Foreman · +300 XP · 🍕 (the backbone of the game)",
+  card:"Data Assets · Enumerations · Maps · prerequisite graph · apply-effect switch · cost scaling"},
 
  {n:7,t:"Tech Tree II — the Screen",tag:"~60 min · The visual tree",xp:300,
-  brief:"Build the real tech-tree screen: nodes placed from data, icons, connector lines between prerequisites, and locked / available / owned colours. Click a node to buy it.",
-  tech:[
-    {name:"UMG layout & Canvas Panel",what:"Position each node on a canvas from its GridPosition; the screen you actually play with.",doc:DOCS.umg},
-    {name:"Dynamic widgets (Create Widget)",what:"Spawn a WBP_TechNode per DA_TechNode at runtime and wire its click to Buy.",doc:DOCS.widgetBP}
-  ],
-  steps:["WBP_TechNode: icon, name, cost, and a state colour (locked / available / owned / maxed).",
-    "WBP_TechTree: loop all DA_TechNode assets → Create Widget → place at GridPosition.",
-    "Draw connector lines from each prerequisite to the node (OnPaint DrawLine, or connector images for the 3-node chain).",
-    "Clicking an available, affordable node calls Buy; refresh all node states on OnTechChanged."],
-  milestone:"A real tech-tree screen: three connected nodes that light up as they become affordable and check off when owned.",
-  boss:"Add the 4th node's GridPosition + prerequisite and confirm it appears wired in with no layout code changes.",
-  reward:"Title stays Pit Foreman · +300 XP · 🎧 Music + stretch.",
-  opt:[{n:"Pan & zoom",d:"Make the tree scrollable/zoomable for when it grows large.",doc:DOCS.umg}],
+  brief:"Build the real tech-tree screen: nodes placed from data, icons, connector lines, and locked / available / owned colours.",
+  tech:[{name:"UMG layout & Canvas Panel",what:"Place each node from its GridPosition.",doc:DOCS.umg},
+        {name:"Dynamic widgets (Create Widget)",what:"One WBP_TechNode per DA_TechNode, wired to Buy.",doc:DOCS.widgetBP}],
+  steps:["WBP_TechNode: icon, name, cost, state colour (locked / available / owned / maxed).","WBP_TechTree loops all DA_TechNode assets → Create Widget → place at GridPosition.","Draw connector lines from each prerequisite (OnPaint DrawLine, or connector images).","Clicking an affordable node calls Buy; refresh all states on OnTechChanged."],
+  opt:[{n:"Pan & zoom",d:"Make the tree scrollable/zoomable for when it grows.",doc:DOCS.umg}],
+  milestone:"A real tech-tree screen — three connected nodes that light up when affordable and check off when bought.",
+  boss:"Add the 4th node's GridPosition + prerequisite and confirm it appears wired in, no layout code.",
+  reward:"Title stays Pit Foreman · +300 XP · 🎧",
   card:"UMG · Canvas Panel · dynamic widget creation · OnPaint line drawing · UI state colours"},
 
- {n:8,t:"Hire the Crew",tag:"~55–65 min · Living, mining dwarves",xp:300,
-  brief:"The idle half. A 'Hire Dwarf' tech node spawns a visible animated dwarf who mines the rock on a timer, dealing his own (upgradeable) damage — with floating damage numbers, just like yours.",
-  tech:[
-    {name:"Data Assets (miners)",what:"DA_MinerData: Mesh, MineAnim, Damage, Speed — a dwarf is data too.",doc:DOCS.dataAssets},
-    {name:"Skeletal Mesh Animation",what:"Play the looping mining animation on the dwarf's skeletal mesh.",doc:DOCS.animSeq},
-    {name:"Gameplay Timers",what:"Each dwarf's looping timer (every Speed seconds) triggers a swing.",doc:DOCS.timers},
-    {name:"Interface reuse (BPI_Mineable)",what:"Dwarves call the exact TakeDamage door your clicks use — the Q3 architecture paying off.",doc:DOCS.bpInterface}
-  ],
-  steps:["DA_MinerData (Mesh, MineAnim, Damage, Speed); make DA_Dwarf1 (Damage 1).",
-    "BP_Dwarf: skeletal mesh looping the mine anim; Damage + Speed from its DA_MinerData.",
-    "Its looping timer → send TakeDamage(Damage) to the current rock (via BPI_Mineable) + spawn a WBP_DamageNumber.",
-    "The HireMiner node effect spawns a BP_Dwarf and places it by the rock; GameInstance holds a CurrentRockActor reference so dwarves know their target.",
-    "Coins still burst on break and are swept up by mouse (a future 'Coin Collector' dwarf node will auto-gather)."],
-  milestone:"Buy 'Hire Dwarf' → a dwarf appears and mines the rock with a swing animation and damage numbers, breaking rocks while you do other things.",
-  boss:"Hire two dwarves and confirm both independently damage the rock and pop their own numbers.",
-  reward:"Title Master Smith · +300 XP · 🏆 The idle loop is alive.",
-  opt:[{n:"Impact-synced hits",d:"Use an Anim Notify on the swing's impact frame to deal damage exactly when the pick strikes.",doc:DOCS.animNotify}],
-  card:"Data Assets (miners) · Skeletal Mesh Animation · Gameplay Timers · interface reuse · shared current-target reference"},
+ {n:8,t:"Hire the Crew",tag:"~60 min · Living, mining dwarves",xp:300,
+  brief:"A 'Hire Dwarf' tech node spawns a visible animated dwarf who mines the rock on a timer, dealing his own upgradeable damage — with damage numbers and the same hit sound as yours.",
+  tech:[{name:"Data Assets (miners)",what:"DA_MinerData: Mesh, MineAnim, Damage, Speed.",doc:DOCS.dataAssets},
+        {name:"Skeletal Mesh Animation",what:"Play the looping mining animation on the dwarf.",doc:DOCS.animSeq},
+        {name:"Gameplay Timers",what:"Each dwarf's looping swing.",doc:DOCS.timers},
+        {name:"Interface reuse (BPI_Mineable)",what:"Dwarves call the same TakeDamage door your clicks use.",doc:DOCS.bpInterface}],
+  steps:["DA_MinerData + DA_Dwarf1 (Damage 1); BP_Dwarf plays the mine anim, Damage/Speed from data.","Looping timer → TakeDamage(Damage) to the current rock + spawn a damage number.","🔊 Reuse the rock-hit sound (Play Sound 2D) on each dwarf swing — one asset, two callers.","HireMiner node spawns a BP_Dwarf; GameInstance holds a CurrentRockActor ref so dwarves know their target.","Coins still burst on break and are swept up by mouse (a Coin Collector dwarf comes in Q16)."],
+  opt:[{n:"Impact-synced hits",d:"Use an Anim Notify on the swing's impact frame to deal damage exactly on the strike.",doc:DOCS.animNotify}],
+  milestone:"Buy 'Hire Dwarf' → a dwarf appears and mines the rock on his own — swinging, thudding, breaking rocks while you do other things.",
+  boss:"Hire two dwarves; both independently damage the rock and pop numbers.",
+  reward:"Title Master Smith · +300 XP · 🏆",
+  card:"Data Assets (miners) · Skeletal Mesh Animation · Gameplay Timers · interface + sound reuse · current-target reference"},
 
- {n:9,t:"Memory Core",tag:"~45–55 min · Save & Load",xp:250,draft:true,
-  brief:"DRAFT — being refined. Persist everything so the mine survives closing the game. Thanks to the tech tree, nearly all progress is one thing: the node levels.",
-  tech:[
-    {name:"SaveGame system",what:"A USaveGame object + Save/Load Game to Slot writes your progress to disk.",doc:DOCS.savegame}
-  ],
-  steps:["SG_DeepDelve (SaveGame): Coins, Depth, NodeLevels (the tech-tree map), CurrentRock + EquippedPickaxe, LastSavedTime.",
-    "Save: Create Save Game Object → copy state → LastSavedTime = UtcNow → Save Game to Slot.",
-    "Load: Does Save Exist → Load → Cast → copy back → refresh HUD + tree.",
-    "Load on Init; autosave on a timer + a manual Save button."],
-  milestone:"Buy nodes, hire dwarves, close the game entirely, reopen — everything is exactly where you left it.",
+ {n:9,t:"The Front Door",tag:"~50–55 min · Main menu & level flow",xp:250,
+  brief:"The game boots into a Main Menu level; New Game starts a fresh mine; Quit exits. An Esc pause menu lets you resume or head back to the menu.",
+  tech:[{name:"UMG menus",what:"WBP_MainMenu and WBP_PauseMenu.",doc:DOCS.umg},
+        {name:"Level flow — Open Level & Input Modes",what:"Load the Mine level; switch input modes and pause while menus are open.",doc:DOCS.framework},
+        {name:"Quit Game",what:"The Quit Game node (works in a packaged build).",doc:DOCS.bp}],
+  steps:["MainMenu level + WBP_MainMenu (New Game, Quit); set it as Game Default Map.","New Game: reset the GameInstance to defaults → Open Level 'Mine'.","Quit: the Quit Game node.","In the Mine: WBP_PauseMenu toggled by Esc — Resume, Quit to Main Menu, Quit Game. Set Input Mode UI Only + Set Game Paused while open."],
+  opt:[{n:"Title art",d:"A splash background and logo for the menu.",doc:DOCS.umg}],
+  milestone:"The game opens on a title screen; New Game drops you into the mine; Esc pauses and returns to the menu or quits.",
+  boss:"Start, pause, quit to menu, start again — confirm the second run begins fresh (New Game resets the persistent GameInstance).",
+  reward:"Title stays Master Smith · +250 XP",
+  card:"UMG menus · Open Level · Input Modes · Set Game Paused · Quit Game · GameInstance persistence"},
+
+ {n:10,t:"Memory Core",tag:"~55–60 min · Save & Load",xp:300,
+  brief:"Give the menus persistence — a SaveGame system, a working Continue, and Save/Load in the pause menu. Loading rebuilds the world from the saved data.",
+  tech:[{name:"SaveGame system",what:"USaveGame + Save/Load Game to Slot, Does Save Exist / Delete Save.",doc:DOCS.savegame}],
+  steps:["SG_DeepDelve: Coins, Depth, NodeLevels, current rock + pickaxe, hired-dwarf count, LastSavedTime.","SaveGame(): create → copy → LastSavedTime = UtcNow → Save to Slot. Wire to pause-menu Save + autosave timer.","RebuildWorld() (reusable): set rock tier + pickaxe, re-spawn dwarves to match the saved count, refresh HUD + tree.","LoadGame(): Does Exist → Load → Cast → copy into GameInstance → RebuildWorld. Wire to pause-menu Load.","Main Menu → Continue (enabled only if a save exists): Load → Open Level Mine → BeginPlay RebuildWorld. Make New Game also delete the save slot."],
+  opt:[{n:"Multiple save slots",d:"A small slot picker (Save 1/2/3) instead of a single auto-slot.",doc:DOCS.savegame}],
+  milestone:"Hire dwarves, quit to desktop, relaunch, Continue → coins, upgrades, depth, and dwarves are all exactly back.",
   boss:"Delete the save (or use a fresh slot) and confirm a clean first-run still works.",
-  reward:"Title stays Master Smith · +250 XP · 😴 Guilt-free early stop.",
-  opt:[],
-  card:"USaveGame · Save/Load Game to/from Slot · serializing a Map + refs · autosave · UTC timestamp"},
+  reward:"Title stays Master Smith · +300 XP · 💾",
+  card:"USaveGame · Save/Load to Slot · serializing a Map + refs · world reconstruction · autosave"},
 
- {n:10,t:"Into the Code",tag:"~60 min · First C++",xp:350,draft:true,
-  brief:"DRAFT — being refined. The C++ pivot, motivated by real pain: the EffectType switch is getting unwieldy, so we refactor it into a polymorphic UTechEffect hierarchy in C++.",
-  tech:[
-    {name:"Programming with C++ (Quick Start)",what:"Set up the toolchain and write your first Unreal C++ class.",doc:DOCS.cppQuick},
-    {name:"Reflection macros (UCLASS/UPROPERTY/UFUNCTION)",what:"Expose C++ to Blueprint and the editor.",doc:DOCS.cpp},
-    {name:"Subsystems",what:"A clean, auto-instanced home for C++ systems.",doc:DOCS.subsystems},
-    {name:"Live Coding",what:"Recompile C++ without restarting the editor (Ctrl+Alt+F11).",doc:DOCS.liveCoding}
-  ],
-  steps:["(Draft) Install Visual Studio 2022 / Xcode; add C++ to the project.",
-    "(Draft) Refactor Effect from an enum+switch into a polymorphic UTechEffect base class with Apply(), plus subclasses per effect.",
-    "(Draft) Move the tech-tree apply logic into a C++ subsystem; call it from Blueprint."],
-  milestone:"(Draft) Adding a new node effect is a new small C++ class, not another case in a growing switch.",
-  boss:"(Draft) Change a formula in C++ and see it update via Live Coding without a restart.",
-  reward:"Title Deeplord · +350 XP.",
-  opt:[],
-  card:"C++ setup · UCLASS/UPROPERTY/UFUNCTION · polymorphism · Subsystems · Live Coding"},
+ {n:11,t:"Ship a Demo",tag:"~40–50 min · First shippable build",xp:250,
+  brief:"Your game already has the full core loop and saves — package it into a standalone build and send it to a friend for real feedback, long before it's 'finished'. Blueprint-only, so it needs no C++ toolchain yet.",
+  tech:[{name:"Packaging & build configs",what:"Cook and build a standalone .exe (Development vs Shipping).",doc:DOCS.packaging}],
+  steps:["Confirm build basics: Game Default Map = MainMenu, project name/icon set.","Package: Platforms → Windows → Package Project, Development config (keeps logs for feedback).","Test the build outside the editor: new game, upgrade, save, quit, relaunch, Continue.","Zip the packaged folder and share it (use Drive/WeTransfer). The recipient needs no engine installed."],
+  opt:[{n:"Feedback loop",d:"Write 3 questions for your friend (what's confusing? what's fun? when did you stop?) and note the answers.",doc:DOCS.packaging}],
+  milestone:"A standalone, double-clickable Deep Delve demo — the full loop with saving — that a friend can play with no Unreal installed.",
+  boss:"Run the packaged build on a different folder or machine and complete a full play/save/quit/continue cycle with the editor closed.",
+  reward:"Title stays Master Smith · +250 XP · 🎉 first shippable build",
+  card:"Packaging · Development vs Shipping · testing a standalone build · distributing a build"},
 
- {n:11,t:"Cave-In",tag:"~60 min · Prestige & offline",xp:400,draft:true,
-  brief:"DRAFT — being refined. Collapse the shaft to reset for a permanent bonus (prestige), and earn while away (offline progress). Both use time math.",
-  tech:[
-    {name:"Date & Time (FDateTime / FTimespan)",what:"Compare the saved timestamp to now to compute offline earnings.",doc:DOCS.datetime},
-    {name:"Prestige / meta-progression (principle)",what:"Reset-for-permanent-bonus loops that sustain long-term play.",doc:DOCS.incremental}
-  ],
-  steps:["(Draft) On load, compute elapsed time and grant capped offline coins.",
-    "(Draft) A Cave-In that resets progress for permanent Dwarven Renown (a global multiplier)."],
-  milestone:"(Draft) Offline payout on return, and a prestige loop that makes each run faster.",
-  boss:"(Draft) Confirm lifetime stats + Renown persist through a cave-in while current progress resets.",
-  reward:"Title stays Deeplord · +400 XP.",
+ {n:12,t:"Into the Code",tag:"~60 min · First C++",xp:300,
+  brief:"The EffectType switch that applies tech nodes has grown unwieldy — the honest reason to reach for C++. Refactor the effect system into a polymorphic UTechEffect hierarchy, built and run from Rider.",
+  tech:[{name:"Programming with C++ (Quick Start)",what:"Set up the toolchain and write your first Unreal C++ class.",doc:DOCS.cppQuick},
+        {name:"Reflection macros (UCLASS/UPROPERTY/UFUNCTION)",what:"Expose C++ to Blueprint and the editor.",doc:DOCS.cpp},
+        {name:"GameInstanceSubsystem",what:"A clean, auto-instanced home for the C++ tech/economy logic.",doc:DOCS.subsystems}],
+  steps:["Set up your IDE: install JetBrains Rider (free for non-commercial). Windows needs MSVC build tools; macOS needs Xcode command-line tools. Set Editor Preferences → Source Code Editor = Rider.","Base UTechEffect (UCLASS, EditInlineNew + Instanced, Blueprintable) with a virtual Apply(context).","Subclasses with their own params + Apply overrides: UpgradePickaxe, EquipPickaxe, Descend, HireMiner.","Change DA_TechNode.Effect into an instanced UTechEffect* — each node carries its own effect object.","Buy(node) becomes node.Effect->Apply(context) — the switch is gone. Optionally move tech/economy into a UGameInstanceSubsystem.","Build & run from Rider with the debugger (close the editor before a full rebuild). We deliberately avoid Live Coding — full builds keep engine state clean and the debugger reliable."],
   opt:[],
-  card:"FDateTime/FTimespan · offline cap · prestige / meta-progression · permanent multipliers"},
+  milestone:"Plays exactly the same, but every tech node runs its own C++ effect object — and you can set breakpoints and watch your game hit them.",
+  boss:"Add a brand-new effect (e.g. UTechEffect_CoinMultiplier) as one new C++ subclass + a node, with zero edits to existing effects (open/closed principle).",
+  reward:"Title Deeplord · +300 XP · 🏆 you bridged Blueprint and C++",
+  card:"C++ setup (Rider) · UCLASS/UPROPERTY/UFUNCTION · polymorphism · instanced EditInlineNew objects · GameInstanceSubsystem · build & debug from the IDE"},
 
- {n:12,t:"Strike It Rich",tag:"~60 min · Juice & shipping",xp:400,draft:true,
-  brief:"DRAFT — being refined. Polish the feel (animation, sound, particles) and package a standalone build you can hand to a friend.",
-  tech:[
-    {name:"UMG Animations",what:"Punch/float feedback on clicks and buys.",doc:DOCS.umgAnim},
-    {name:"Audio & Sound Cues",what:"Pick strikes, coin chings, forge clangs.",doc:DOCS.soundCue},
-    {name:"Niagara VFX",what:"Rock-dust and spark bursts.",doc:DOCS.niagara},
-    {name:"Packaging & Shipping",what:"Cook and build a standalone .exe.",doc:DOCS.packaging}
-  ],
-  steps:["(Draft) Add UMG animations, Sound Cues, and Niagara bursts.",
-    "(Draft) Package the project (Shipping) and run the .exe outside the editor."],
-  milestone:"(Draft) A standalone Deep Delve build with sound and effects, playable by anyone.",
-  boss:"(Draft) The packaged build digs, hires, saves, descends and prestiges with sound.",
-  reward:"Title Deeplord, Shaper of the Deep · +400 XP · 🏅 QUEST LINE COMPLETE.",
-  opt:[],
-  card:"UMG animations · Sound Cues · Niagara · Packaging"}
+ {n:13,t:"Sharper & Faster",tag:"~55 min · Pickaxe upgrades",xp:300,
+  brief:"Deepen the pickaxe in the tech tree: damage, an auto-swing (your pick hits on its own, speed-upgradable), and critical hits (a chance for a big-damage, big-flash strike with its own sound).",
+  tech:[{name:"New C++ UTechEffect subclasses",what:"Each new upgrade line is a small effect class dropped into the tree.",doc:DOCS.cpp},
+        {name:"Gameplay Timers (auto-swing)",what:"A looping timer swings the pick on its own.",doc:DOCS.timers},
+        {name:"Random rolls (crits)",what:"Roll CritChance each swing for a critical hit.",doc:DOCS.bp},
+        {name:"UMG animation + crit sound",what:"A distinct crit popup and a beefier Play Sound 2D on crits.",doc:DOCS.umgAnim}],
+  steps:["Player stats on the subsystem: bAutoSwing, AutoSwingInterval (Speed), CritChance, CritMultiplier.","Auto-swing: a looping Timer at AutoSwingInterval dealing a normal swing. Nodes: Auto-Swing (unlock) → Swing Speed (repeatable).","Crits: on each player swing roll CritChance; on a crit multiply damage by CritMultiplier, spawn a gold crit popup, 🔊 play the crit sound. Nodes: Critical Strike → Critical Chance.","Extend the Sharpen node as another damage level.","Author the new nodes with GridPosition + prerequisites — they slot into the tree screen."],
+  opt:[{n:"Crit feel",d:"A crit camera shake, and crits also multiply the coins dropped.",doc:DOCS.umgAnim}],
+  milestone:"Your pickaxe swings on its own and occasionally lands a booming, gold 'CRIT!' — tune damage, speed, and crit chance with coins.",
+  boss:"Set CritChance to 1.0 and confirm every hit crits with the popup + sound; drop the auto-swing interval and watch it mine hands-free.",
+  reward:"Title stays Deeplord · +300 XP",
+  card:"C++ effect subclasses · Gameplay Timers · RNG crits · UMG crit popup · crit sound"},
+
+ {n:14,t:"The Growing Crew",tag:"~50–55 min · Crew upgrades",xp:300,
+  brief:"Buy a bigger crew and spend coins to make every dwarf hit harder and faster. New global crew stats, applied live to dwarves already in the mine.",
+  tech:[{name:"Global modifiers across live actors",what:"CrewDamageMult / CrewSpeedMult apply to every dwarf.",doc:DOCS.cpp},
+        {name:"Event Dispatchers (live update)",what:"OnCrewStatsChanged makes existing dwarves re-read stats and reset timers.",doc:DOCS.dispatchers},
+        {name:"Data Assets (dwarf types)",what:"Extra DA_MinerData for better dwarf tiers.",doc:DOCS.dataAssets}],
+  steps:["Crew stats on the subsystem: CrewDamageMult, CrewSpeedMult (start at 1). Dwarf damage = MinerData.Damage × mult; interval = Speed ÷ mult.","New UTechEffect subclasses: UpgradeCrewDamage, UpgradeCrewSpeed (repeatable).","On a multiplier change, broadcast OnCrewStatsChanged; each dwarf re-reads stats and resets its timer.","Arrange hired dwarves in a ring/line so a growing crew doesn't overlap.","Optional: new dwarf types (Apprentice → Veteran → Foreman) as extra DA_MinerData + HireMiner nodes."],
+  opt:[{n:"Crew cap & formation",d:"A max-crew limit (itself an upgradable node) and tidy formation placement.",doc:DOCS.bp}],
+  milestone:"The mine fills with dwarves, and upgrading damage/speed visibly ramps hands-free income — the whole crew speeds up at once, not just new hires.",
+  boss:"With several dwarves mining, buy Crew Speed twice and confirm all of them visibly swing faster.",
+  reward:"Title stays Deeplord · +300 XP",
+  card:"global modifiers across live actors · Event Dispatchers · Timer reset · Data Assets · effect subclasses"},
+
+ {n:15,t:"Rich Veins",tag:"~55 min · Vein content & lucky drops",xp:350,
+  brief:"Make the veins a progression axis: a yield upgrade that multiplies every payout, new vein tiers to descend into, and a lucky mineral drop — a chance for a broken rock to cough up a gem worth a coin jackpot.",
+  tech:[{name:"Content via Data Assets",what:"New DA_RockData tiers + reused Descend effects.",doc:DOCS.dataAssets},
+        {name:"Random-chance drops",what:"Roll MineralChance on break for a valuable gem.",doc:DOCS.bp},
+        {name:"Cursor-over pickup reuse",what:"BP_Mineral collected like a coin (reuses Q4's Collect()).",doc:DOCS.bp}],
+  steps:["Vein yield: a global CoinMult; coins = RockData.CoinReward × CoinMult. New repeatable node UpgradeYield.","New veins: author more DA_RockData tiers (tougher HP, richer reward, new mesh) + Descend nodes chained by prerequisites.","Lucky mineral: stats MineralChance, MineralValue. On break, roll the chance; on a hit spawn BP_Mineral (Synty gem, worth MineralValue) with a sparkle, collected by hover. Nodes: UpgradeMineralChance (+ optional value)."],
+  opt:[{n:"Jackpot feel",d:"A screen flash + chime on a mineral drop, and distinct gem meshes/colours per tier.",doc:DOCS.soundCue}],
+  milestone:"Veins get richer as you descend copper → gold → gems, upgrades multiply every payout, and rocks occasionally crack open a jackpot gem.",
+  boss:"Set MineralChance to 1.0 so every rock drops a gem, then descend a couple of tiers and confirm deeper veins pay more.",
+  reward:"Title stays Deeplord · +350 XP",
+  card:"Data Assets tiers · reused Descend effects · RNG drops · economy multipliers · pickup reuse"},
+
+ {n:16,t:"The Coin Collector",tag:"~50–55 min · An auto-collecting dwarf",xp:300,
+  brief:"A new dwarf, bought in the tech tree, that walks right-to-left across the mine and auto-collects every coin and mineral it touches — no more manual sweeping. Its Speed is upgradable and you can buy more.",
+  tech:[{name:"Collision & overlap events",what:"Auto-pickup by touch via OnComponentBeginOverlap (needs Generate Overlap Events).",doc:DOCS.collision},
+        {name:"Actor movement (Tick + delta time)",what:"Move the collector left each frame, scaled by delta.",doc:DOCS.bp},
+        {name:"Data Assets (collector)",what:"DA_CollectorData: Mesh, WalkAnim, Speed.",doc:DOCS.dataAssets}],
+  steps:["DA_CollectorData + BP_CollectorDwarf: skeletal mesh with a walk anim + an overlap collision shape.","Movement: on Tick, move left by Speed × DeltaTime; past the left edge, reset to the right and sweep again.","Auto-collect: OnComponentBeginOverlap with BP_Coin/BP_Mineral → call its Collect() (refactor the coin's collect into a shared function so hover and overlap both use it; reuses the coin-pickup sound).","Tech nodes: Hire Collector (repeatable — more collectors) and Collector Speed (repeatable). Q14's live-update wiring applies so existing collectors speed up too."],
+  opt:[{n:"Collector polish",d:"A cart/bag that visibly fills, and pathing along a spline instead of a straight line.",doc:DOCS.bp}],
+  milestone:"A dwarf strolls across the mine hoovering up coins on its own — buy more and upgrade their speed to keep the floor clear.",
+  boss:"Let a pile of coins build up, confirm the collector sweeps them as it crosses, then buy a second collector and confirm both gather.",
+  reward:"Title stays Deeplord · +300 XP",
+  card:"Collision & overlap events · actor movement (Tick + delta) · reusable Collect() · Data Assets · tech nodes"},
+
+ {n:17,t:"Strike It Rich",tag:"~60 min · Juice & the v1.0 release",xp:400,
+  brief:"Take everything you built and make it feel like a real game, then cut a polished v1.0 release. The core SFX are already in from earlier quests — this is animation, VFX, ambience, and the final Shipping build.",
+  tech:[{name:"UMG Animations",what:"Scale-punch on hits and purchases, unlock flourishes.",doc:DOCS.umgAnim},
+        {name:"Audio & Sound Cues",what:"Ambient/music, and optionally upgrade the simple Play-Sound-2D calls into richer Sound Cues (pitch variation).",doc:DOCS.soundCue},
+        {name:"Niagara VFX",what:"Rock-dust on break, sparks on crits, shimmer on minerals, poof on coin pickup.",doc:DOCS.niagara},
+        {name:"Packaging a Shipping build",what:"Icon/splash/name, Shipping config, package v1.0.",doc:DOCS.packaging}],
+  steps:["UMG animations: DIG hit punch, tech-node purchase pops, a tree 'unlock' flourish.","Audio: add an ambient mine loop / music; optionally convert the rock-hit, coin, crit sounds into Sound Cues with pitch variation.","Niagara: dust burst on break, sparks on crit, shimmer on mineral, poof on coin collect. Optional camera shake.","Ship v1.0: set icon/splash/name, switch to Shipping config, Package, test end-to-end, and share (friend or itch.io)."],
+  opt:[{n:"Options & publish",d:"A small settings menu (master volume) and a proper itch.io page.",doc:DOCS.packaging}],
+  milestone:"A polished standalone v1.0 — clicks punch, coins ching, crits boom, dust and sparks fly — playable start to finish outside the editor.",
+  boss:"The packaged Shipping build plays the whole game (title → mine → tech tree → deep veins → collectors) with sound and effects.",
+  reward:"Deeplord, Shaper of the Deep · +400 XP · 🏅 QUEST LINE COMPLETE. Next to learn: GAS, replication/multiplayer, AI.",
+  card:"UMG animations · Sound Cues · Niagara · Shipping build · (next: GAS, replication, AI)"}
 ];
 
-const STACK=["Unreal Engine 5.8","Blueprints","C++","Enhanced Input","UMG UI","Blueprint Interfaces","GameInstance","Data Assets","Event Dispatchers","Gameplay Timers","Skeletal Animation","SaveGame","Niagara VFX","Packaging","Synty POLYGON Dungeon Realms"];
+const AFTER={
+ 1:"Not interactive yet — you press Play and admire a small dwarven mine with a dwarf in it, framed by a fixed camera.",
+ 2:"You can click the rock and watch its HP fall; after ten hits it shatters and a fresh rock instantly replaces it, so you mine endlessly — but nothing is counted yet.",
+ 3:"Clicking now feels like mining: every hit lands with a sound and a floating '1', and the rock shatters with a satisfying crack.",
+ 4:"Breaking a rock pays off — it bursts into coins you sweep up with a 'ching', the Coins counter climbs, and Depth ticks up. The core earn loop is alive.",
+ 5:"Plays identically for the player, but rocks and pickaxes are now data you can add to in seconds — invisible to players, huge for you.",
+ 6:"You can spend coins through a plain list of buttons — sharpen your pick, buy a better one, and descend to tougher, richer rock. The whole progression works with placeholder UI.",
+ 7:"Those upgrades move onto a real tech-tree screen — connected nodes with icons that light up when affordable and check off when bought.",
+ 8:"Buy the Hire Dwarf node and a dwarf walks in and mines the rock on his own — swinging, thudding, and breaking rocks while you do other things. The idle half is live.",
+ 9:"The game boots to a proper title screen — New Game drops you into the mine, and Esc pauses so you can return to the menu or quit.",
+ 10:"Your run truly persists — quit to desktop, relaunch, hit Continue, and your coins, upgrades, depth, and dwarves are all exactly back.",
+ 11:"You have a standalone, double-clickable Deep Delve demo — the full loop with saving — that a friend can play with no Unreal installed.",
+ 12:"Plays the same to the player, but the tech-tree effects now run through C++ effect classes, and adding a new upgrade is a small new class instead of a growing switch.",
+ 13:"Your pickaxe now swings on its own and occasionally lands a booming, gold 'CRIT!' — and you can pour coins into damage, speed, and crit chance.",
+ 14:"The mine fills with dwarves, and upgrading their damage and speed visibly ramps your hands-free income — the whole crew speeds up at once.",
+ 15:"Veins get richer as you descend copper → gold → gems, upgrades multiply every payout, and now and then a rock cracks open a gem worth a jackpot of coins.",
+ 16:"A dwarf strolls across the mine hoovering up coins on its own — buy more and upgrade their speed to keep the floor clear while you watch the money roll in.",
+ 17:"The finished game — clicks punch, coins ching, crits boom, dust and sparks fly — running as a polished standalone v1.0 you can share."
+};
+
+const STACK=["Unreal Engine 5.8","Blueprints","C++","Enhanced Input","UMG UI","Blueprint Interfaces","GameInstance","Data Assets","Event Dispatchers","Gameplay Timers","Skeletal Animation","Audio & Sound Cues","Collision & Overlaps","SaveGame","Niagara VFX","Packaging","Synty POLYGON Dungeon Realms"];
 
 let done = load();
 function load(){ try{ return JSON.parse(localStorage.getItem('deepdelve_done')||'{}'); }catch(e){ return {}; } }
-function save(){
-  try{
-    localStorage.setItem('deepdelve_done', JSON.stringify(done));
-    localStorage.setItem('deepdelve_saved', new Date().toISOString());
-  }catch(e){}
-  updateSaveState();
-}
+function save(){ try{ localStorage.setItem('deepdelve_done', JSON.stringify(done)); localStorage.setItem('deepdelve_saved', new Date().toISOString()); }catch(e){} updateSaveState(); }
 function storageOK(){ try{ localStorage.setItem('__dd_test','1'); localStorage.removeItem('__dd_test'); return true; }catch(e){ return false; } }
-function updateSaveState(){
-  const el=document.getElementById('saveState'); if(!el) return;
-  const t=localStorage.getItem('deepdelve_saved');
-  el.textContent = t ? ('💾 Saved on this device · last updated '+new Date(t).toLocaleString())
-                     : '💾 Progress saves automatically on this device';
-}
-
+function updateSaveState(){ const el=document.getElementById('saveState'); if(!el) return; const t=localStorage.getItem('deepdelve_saved'); el.textContent = t ? ('💾 Saved on this device · last updated '+new Date(t).toLocaleString()) : '💾 Progress saves automatically on this device'; }
 function totalXP(){ return QUESTS.reduce((s,q)=> s + (done[q.n]?q.xp:0), 0); }
 function rankFor(xp){ let r=RANKS[0]; for(const x of RANKS){ if(xp>=x[0]) r=x; } return r; }
 function nextRank(xp){ for(const x of RANKS){ if(xp<x[0]) return x; } return null; }
 function isUnlocked(n){ return n===1 || done[n-1]===true; }
 function allTech(){ const out=[]; QUESTS.forEach(q=> (q.tech||[]).forEach(t=> out.push({...t,q:q.n}))); return out; }
 function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
-
 function renderStack(){ document.getElementById('stack').innerHTML = STACK.map(s=>`<span>${esc(s)}</span>`).join(''); }
-
 function renderTechMap(){
   const tech=allTech();
   document.getElementById('techtotal').textContent=tech.length;
-  document.getElementById('techgrid').innerHTML = tech.map(t=>{
-    const learned = done[t.q]===true;
-    return `<div class="techchip${learned?' learned':''}" title="${esc(t.what)}">
-      <span class="dot">${learned?'✓':''}</span>
-      <a href="${t.doc}" target="_blank" rel="noopener">${esc(t.name)}</a>
-      <span class="q">Q${t.q}</span>
-    </div>`;
-  }).join('');
+  document.getElementById('techgrid').innerHTML = tech.map(t=>{ const learned = done[t.q]===true;
+    return `<div class="techchip${learned?' learned':''}" title="${esc(t.what)}"><span class="dot">${learned?'✓':''}</span><a href="${t.doc}" target="_blank" rel="noopener">${esc(t.name)}</a><span class="q">Q${t.q}</span></div>`; }).join('');
   document.getElementById('techcount').textContent = tech.filter(t=>done[t.q]===true).length;
 }
-
 function renderHUD(){
   const xp=totalXP(), r=rankFor(xp), nx=nextRank(xp);
-  document.getElementById('xp').textContent=xp;
-  document.getElementById('rank').textContent=r[1];
+  document.getElementById('xp').textContent=xp; document.getElementById('rank').textContent=r[1];
   document.getElementById('qtotal').textContent=QUESTS.length;
   document.getElementById('donecount').textContent=Object.values(done).filter(Boolean).length;
-  const maxXP=RANKS[RANKS.length-1][0];
-  document.getElementById('fill').style.width=Math.min(100, Math.round(xp/maxXP*100))+'%';
+  document.getElementById('fill').style.width=Math.min(100, Math.round(xp/RANKS[RANKS.length-1][0]*100))+'%';
   document.getElementById('next').textContent = nx ? `${nx[0]-xp} XP to ${nx[1]}` : 'Max rank — Deeplord.';
 }
-
 function renderQuests(){
   const c=document.getElementById('quests'); c.innerHTML='';
   QUESTS.forEach(q=>{
     const unlocked=isUnlocked(q.n), isDone=done[q.n]===true;
-    const el=document.createElement('div');
-    el.className='quest'+(isDone?' done':'')+(unlocked?'':' locked');
-    el.dataset.n=q.n;
+    const el=document.createElement('div'); el.className='quest'+(isDone?' done':'')+(unlocked?'':' locked'); el.dataset.n=q.n;
     const stepsHtml=q.steps.map(s=>`<li>${esc(s)}</li>`).join('');
     const techHtml=(q.tech||[]).map(t=>`<li><span class="tn">${esc(t.name)}</span> — <span class="tw">${esc(t.what)}</span><br><a class="dl" href="${t.doc}" target="_blank" rel="noopener">📖 Documentation ↗</a></li>`).join('');
     const optHtml=(q.opt&&q.opt.length)?q.opt.map(o=>`<div class="opt">⭐ <span class="on">Optional — ${esc(o.n)}:</span> ${esc(o.d)} ${o.doc?`<a class="dl" href="${o.doc}" target="_blank" rel="noopener">📖 ↗</a>`:''}</div>`).join(''):'';
     el.innerHTML=`
       <div class="qhead">
         <div class="chk">${isDone?'✓':''}</div>
-        <div class="qmeta">
-          <p class="qtitle">Quest ${q.n} — ${esc(q.t)} ${q.draft?'<span class="badge draft">DRAFT</span>':''} ${unlocked?'':'🔒'}</p>
-          <p class="qtag">${esc(q.tag)}</p>
-        </div>
-        <div class="qxp">+${q.xp} XP</div>
-        <div class="caret">▶</div>
+        <div class="qmeta"><p class="qtitle">Quest ${q.n} — ${esc(q.t)} ${unlocked?'':'🔒'}</p><p class="qtag">${esc(q.tag)}</p></div>
+        <div class="qxp">+${q.xp} XP</div><div class="caret">▶</div>
       </div>
       <div class="qbody">
         ${unlocked?'':`<p class="locknote">🔒 Locked. Complete Quest ${q.n-1} to unlock.</p>`}
-        ${q.draft?`<div class="draftnote">🚧 This quest is still being designed — details below are provisional and will change.</div>`:''}
         <h4>Brief</h4><p>${esc(q.brief)}</p>
+        <h4>🎮 After this quest</h4><div class="after">${esc(AFTER[q.n]||'')}</div>
         <h4>🛠️ Teaches (tech, tools &amp; principles)</h4><ul class="teaches">${techHtml}</ul>
         <h4>Steps</h4><ol>${stepsHtml}</ol>
         ${optHtml?`<h4>Optional side-quests</h4>${optHtml}`:''}
@@ -478,51 +440,28 @@ function renderQuests(){
         <h4>🗂️ Knowledge card</h4><div class="card">${esc(q.card)}</div>
       </div>`;
     el.querySelector('.qhead').addEventListener('click',(e)=>{ if(e.target.classList.contains('chk')) return; el.classList.toggle('open'); });
-    el.querySelector('.chk').addEventListener('click',(e)=>{
-      e.stopPropagation();
+    el.querySelector('.chk').addEventListener('click',(e)=>{ e.stopPropagation();
       if(!isUnlocked(q.n)){ toast(`🔒 Finish Quest ${q.n-1} first`); return; }
-      if(done[q.n]){ delete done[q.n]; } else { done[q.n]=true; celebrate(q); }
-      save(); refresh();
-    });
+      if(done[q.n]){ delete done[q.n]; } else { done[q.n]=true; celebrate(q); } save(); refresh(); });
     c.appendChild(el);
   });
 }
-
 let openState={};
 function snapshotOpen(){ openState={}; document.querySelectorAll('.quest.open').forEach(el=>openState[el.dataset.n]=true); }
 function restoreOpen(){ document.querySelectorAll('.quest').forEach(el=>{ if(openState[el.dataset.n]) el.classList.add('open'); }); }
 function refresh(){ snapshotOpen(); renderQuests(); restoreOpen(); renderHUD(); renderTechMap(); updateSaveState(); }
-
-function celebrate(q){
-  const xp=totalXP(); const before=xp-q.xp;
-  const rBefore=rankFor(before)[1], rAfter=rankFor(xp)[1];
-  const nTech=(q.tech||[]).length;
+function celebrate(q){ const xp=totalXP(); const rBefore=rankFor(xp-q.xp)[1], rAfter=rankFor(xp)[1]; const nTech=(q.tech||[]).length;
   if(rBefore!==rAfter) toast(`⛏️ Rank up! You are now ${rAfter} — ${nTech} new skill${nTech===1?'':'s'} learned`);
-  else toast(`✅ Quest ${q.n} complete! +${q.xp} XP · ${nTech} skill${nTech===1?'':'s'} unlocked`);
-}
-
+  else toast(`✅ Quest ${q.n} complete! +${q.xp} XP · ${nTech} skill${nTech===1?'':'s'} unlocked`); }
 let toastTimer;
 function toast(msg){ const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show'); clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3200); }
-
 document.getElementById('expandAll').onclick=()=>document.querySelectorAll('.quest').forEach(e=>e.classList.add('open'));
 document.getElementById('collapseAll').onclick=()=>document.querySelectorAll('.quest').forEach(e=>e.classList.remove('open'));
 document.getElementById('reset').onclick=()=>{ if(confirm('Reset all quest progress? This cannot be undone.')){ done={}; save(); refresh(); toast('Progress reset — a new shaft begins'); } };
-document.getElementById('export').onclick=()=>{
-  const code=btoa(unescape(encodeURIComponent(JSON.stringify(done))));
-  const ok=()=>toast('📋 Progress code copied — paste it somewhere safe or onto another device');
-  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(ok, ()=>window.prompt('Copy your progress code:', code)); }
-  else { window.prompt('Copy your progress code:', code); }
-};
-document.getElementById('import').onclick=()=>{
-  const code=window.prompt('Paste a progress code to restore it:');
-  if(!code) return;
-  try{
-    const obj=JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
-    if(obj && typeof obj==='object' && !Array.isArray(obj)){ done=obj; save(); refresh(); toast('✅ Progress restored'); }
-    else toast('⚠️ That code did not look right');
-  }catch(e){ toast('⚠️ Could not read that code'); }
-};
-
+document.getElementById('export').onclick=()=>{ const code=btoa(unescape(encodeURIComponent(JSON.stringify(done)))); const ok=()=>toast('📋 Progress code copied — paste it somewhere safe or onto another device');
+  if(navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(code).then(ok, ()=>window.prompt('Copy your progress code:', code)); } else { window.prompt('Copy your progress code:', code); } };
+document.getElementById('import').onclick=()=>{ const code=window.prompt('Paste a progress code to restore it:'); if(!code) return;
+  try{ const obj=JSON.parse(decodeURIComponent(escape(atob(code.trim())))); if(obj && typeof obj==='object' && !Array.isArray(obj)){ done=obj; save(); refresh(); toast('✅ Progress restored'); } else toast('⚠️ That code did not look right'); }catch(e){ toast('⚠️ Could not read that code'); } };
 renderStack(); renderQuests(); renderHUD(); renderTechMap(); updateSaveState();
 if(!storageOK()){ const w=document.getElementById('saveWarn'); if(w) w.style.display='block'; }
 </script>
