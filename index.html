@@ -41,6 +41,8 @@ h1 .pick{color:var(--gold)}
 .controls button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:8px;
   padding:6px 12px;font-size:12px;cursor:pointer}
 .controls button:hover{color:var(--ink);border-color:var(--gold)}
+.savestate{font-size:11.5px;color:var(--muted);margin-top:10px}
+.savewarn{font-size:12px;color:#ffb4a0;background:rgba(255,90,60,.10);border:1px solid rgba(255,90,60,.4);border-radius:8px;padding:8px 10px;margin-top:8px}
 
 .techmap{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 22px}
 .techmap h3{margin:0 0 4px;font-size:14px;color:var(--gold)}
@@ -120,8 +122,12 @@ h1 .pick{color:var(--gold)}
     <div class="controls">
       <button id="expandAll">Expand all</button>
       <button id="collapseAll">Collapse all</button>
+      <button id="export">Export progress</button>
+      <button id="import">Import progress</button>
       <button id="reset">Reset progress</button>
     </div>
+    <div class="savestate" id="saveState">💾 Progress saves automatically on this device</div>
+    <div class="savewarn" id="saveWarn" style="display:none">⚠️ This browser is blocking local storage (private/incognito mode?). Your progress won't be remembered here — use a normal window.</div>
   </div>
 
   <div class="techmap">
@@ -137,7 +143,7 @@ h1 .pick{color:var(--gold)}
 
   <div id="quests"></div>
 
-  <div class="footer">Progress saves automatically on this device. Docs open on dev.epicgames.com. The theme is yours — dig how you like.</div>
+  <div class="footer">Your progress is saved in this browser on this device — it stays even after you close the tab or shut the computer down, and every reader gets their own. It won't follow you to a different browser or device; use <b>Export / Import progress</b> to move it. Docs open on dev.epicgames.com.</div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -359,7 +365,20 @@ const STACK=["Unreal Engine 5.8","Blueprints","C++","UMG UI","GameInstance & Sub
 
 let done = load();
 function load(){ try{ return JSON.parse(localStorage.getItem('deepdelve_done')||'{}'); }catch(e){ return {}; } }
-function save(){ localStorage.setItem('deepdelve_done', JSON.stringify(done)); }
+function save(){
+  try{
+    localStorage.setItem('deepdelve_done', JSON.stringify(done));
+    localStorage.setItem('deepdelve_saved', new Date().toISOString());
+  }catch(e){ /* storage unavailable (e.g. private mode) */ }
+  updateSaveState();
+}
+function storageOK(){ try{ localStorage.setItem('__dd_test','1'); localStorage.removeItem('__dd_test'); return true; }catch(e){ return false; } }
+function updateSaveState(){
+  const el=document.getElementById('saveState'); if(!el) return;
+  const t=localStorage.getItem('deepdelve_saved');
+  el.textContent = t ? ('💾 Saved on this device · last updated '+new Date(t).toLocaleString())
+                     : '💾 Progress saves automatically on this device';
+}
 
 function totalXP(){ return QUESTS.reduce((s,q)=> s + (done[q.n]?q.xp:0), 0); }
 function rankFor(xp){ let r=RANKS[0]; for(const x of RANKS){ if(xp>=x[0]) r=x; } return r; }
@@ -450,7 +469,7 @@ function renderQuests(){
 let openState={};
 function snapshotOpen(){ openState={}; document.querySelectorAll('.quest.open').forEach(el=>openState[el.dataset.n]=true); }
 function restoreOpen(){ document.querySelectorAll('.quest').forEach(el=>{ if(openState[el.dataset.n]) el.classList.add('open'); }); }
-function refresh(){ snapshotOpen(); renderQuests(); restoreOpen(); renderHUD(); renderTechMap(); }
+function refresh(){ snapshotOpen(); renderQuests(); restoreOpen(); renderHUD(); renderTechMap(); updateSaveState(); }
 
 function celebrate(q){
   const xp=totalXP(); const before=xp-q.xp;
@@ -470,7 +489,25 @@ document.getElementById('expandAll').onclick=()=>document.querySelectorAll('.que
 document.getElementById('collapseAll').onclick=()=>document.querySelectorAll('.quest').forEach(e=>e.classList.remove('open'));
 document.getElementById('reset').onclick=()=>{ if(confirm('Reset all quest progress? This cannot be undone.')){ done={}; save(); refresh(); toast('Progress reset — a new shaft begins'); } };
 
-renderStack(); renderQuests(); renderHUD(); renderTechMap();
+document.getElementById('export').onclick=()=>{
+  const code=btoa(unescape(encodeURIComponent(JSON.stringify(done))));
+  const ok=()=>toast('📋 Progress code copied — paste it somewhere safe or onto another device');
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(code).then(ok, ()=>window.prompt('Copy your progress code:', code));
+  } else { window.prompt('Copy your progress code:', code); }
+};
+document.getElementById('import').onclick=()=>{
+  const code=window.prompt('Paste a progress code to restore it:');
+  if(!code) return;
+  try{
+    const obj=JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+    if(obj && typeof obj==='object' && !Array.isArray(obj)){ done=obj; save(); refresh(); toast('✅ Progress restored'); }
+    else toast('⚠️ That code did not look right');
+  }catch(e){ toast('⚠️ Could not read that code'); }
+};
+
+renderStack(); renderQuests(); renderHUD(); renderTechMap(); updateSaveState();
+if(!storageOK()){ const w=document.getElementById('saveWarn'); if(w) w.style.display='block'; }
 </script>
 </body>
 </html>
