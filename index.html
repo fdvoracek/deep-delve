@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deep Delve — Quest Log</title>
+<style>
+:root{ color-scheme: light;
+  --bg:#120e0a; --panel:#1e1811; --panel2:#2a2016; --ink:#f3e9db; --muted:#b39d82;
+  --gold:#e8b23a; --ember:#ff8a3d; --ore:#6fb1c9; --green:#7dd66b; --line:#3a2d1e; --lock:#4a3a27;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+  background:radial-gradient(1200px 700px at 50% -12%, #2c2013 0%, #120e0a 62%);color:var(--ink);}
+.wrap{max-width:880px;margin:0 auto;padding:28px 20px 80px;}
+a{color:var(--ore);text-decoration:none}
+a:hover{text-decoration:underline}
+header{text-align:center;margin-bottom:18px}
+h1{font-size:30px;margin:0 0 4px;letter-spacing:.5px}
+h1 .pick{color:var(--gold)}
+.sub{color:var(--muted);font-size:14px;margin:0}
+.tag2{color:var(--ember);font-size:12px;margin:6px 0 0;letter-spacing:.4px}
+
+.intro{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin:0 0 18px}
+.intro h2{margin:0 0 8px;font-size:15px;color:var(--gold);letter-spacing:.3px}
+.intro p{margin:0 0 10px;font-size:13.5px;line-height:1.6;color:var(--ink)}
+.intro p:last-child{margin-bottom:0}
+.intro b{color:var(--gold)}
+.stack{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.stack span{background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:3px 10px;font-size:11.5px;color:var(--muted)}
+
+.hud{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px 20px;margin:0 0 14px;
+  position:sticky;top:10px;z-index:5;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+.hud .row{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap}
+.rank{font-size:20px;font-weight:700;color:var(--gold)}
+.xpnum{color:var(--muted);font-size:13px}
+.bar{height:12px;background:var(--panel2);border-radius:8px;margin-top:12px;overflow:hidden;border:1px solid var(--line)}
+.fill{height:100%;width:0;background:linear-gradient(90deg,var(--ore),var(--gold),var(--ember));transition:width .5s ease}
+.next{font-size:12px;color:var(--muted);margin-top:8px}
+.controls{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
+.controls button{background:var(--panel2);color:var(--muted);border:1px solid var(--line);border-radius:8px;
+  padding:6px 12px;font-size:12px;cursor:pointer}
+.controls button:hover{color:var(--ink);border-color:var(--gold)}
+
+.techmap{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px 18px;margin:0 0 22px}
+.techmap h3{margin:0 0 4px;font-size:14px;color:var(--gold)}
+.techmap .cap{margin:0 0 12px;font-size:12px;color:var(--muted)}
+.techgrid{display:flex;flex-wrap:wrap;gap:8px}
+.techchip{display:flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:10px;padding:6px 11px;font-size:12.5px;color:var(--muted);opacity:.65;transition:all .3s}
+.techchip .dot{width:14px;height:14px;border-radius:50%;border:2px dashed var(--lock);flex:0 0 auto;
+  display:grid;place-items:center;font-size:9px;color:#120e0a;font-weight:800}
+.techchip.learned{opacity:1;color:var(--ink);border-color:var(--gold);background:rgba(232,178,58,.10)}
+.techchip.learned .dot{background:var(--gold);border:2px solid var(--gold)}
+.techchip a{color:inherit}
+.techchip .q{font-size:10px;color:var(--muted);opacity:.8}
+
+.quest{background:var(--panel);border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden;
+  transition:border-color .2s, opacity .3s}
+.quest.locked{opacity:.55}
+.quest.done{border-color:var(--green)}
+.qhead{display:flex;align-items:center;gap:14px;padding:16px 18px;cursor:pointer}
+.chk{width:26px;height:26px;border-radius:50%;border:2px solid var(--lock);flex:0 0 auto;display:grid;place-items:center;
+  font-size:15px;font-weight:700;color:#120e0a;background:transparent}
+.quest.done .chk{background:var(--green);border-color:var(--green)}
+.quest.locked .chk{border-style:dashed}
+.qmeta{flex:1;min-width:0}
+.qtitle{font-size:16px;font-weight:650;margin:0}
+.qtag{font-size:12px;color:var(--muted);margin-top:2px}
+.qxp{font-size:12px;color:var(--gold);white-space:nowrap}
+.caret{color:var(--muted);transition:transform .2s}
+.quest.open .caret{transform:rotate(90deg)}
+.qbody{display:none;padding:0 18px 18px;border-top:1px solid var(--line)}
+.quest.open .qbody{display:block}
+.qbody h4{margin:16px 0 6px;font-size:12px;text-transform:uppercase;letter-spacing:.6px;color:var(--ember)}
+.qbody p,.qbody li{font-size:14px;line-height:1.55;color:var(--ink)}
+.qbody ol,.qbody ul{margin:6px 0;padding-left:20px}
+.qbody .concepts{color:var(--muted);font-size:13px}
+.milestone{background:rgba(125,214,107,.10);border:1px solid rgba(125,214,107,.35);border-radius:10px;padding:10px 12px;font-size:14px}
+.card{background:var(--panel2);border:1px dashed var(--line);border-radius:10px;padding:10px 12px;font-size:13px;color:var(--muted)}
+.reward{background:rgba(232,178,58,.09);border:1px solid rgba(232,178,58,.35);border-radius:10px;padding:10px 12px;font-size:14px}
+.teaches{list-style:none;padding:0;margin:6px 0}
+.teaches li{background:var(--panel2);border:1px solid var(--line);border-radius:10px;padding:9px 12px;margin:6px 0;font-size:13px;line-height:1.5}
+.teaches .tn{color:var(--gold);font-weight:650}
+.teaches .tw{color:var(--muted)}
+.teaches .dl{display:inline-block;margin-top:3px;font-size:12px}
+.locknote{font-size:13px;color:var(--muted);padding:14px 18px}
+.assetbox{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px 18px;margin:0 0 8px}
+.assetbox h3{margin:0 0 6px;font-size:14px;color:var(--gold)}
+.assetbox p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:28px}
+.toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(120px);
+  background:var(--gold);color:#241a00;font-weight:700;padding:12px 20px;border-radius:12px;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);transition:transform .4s cubic-bezier(.2,1.4,.4,1);z-index:20;max-width:90%}
+.toast.show{transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1><span class="pick">⛏️</span> Deep Delve</h1>
+    <p class="sub">A gamified path to learning Unreal Engine 5.8 · Blueprints → C++</p>
+    <p class="tag2">Mine → Process → Craft → dig deeper. Goal: go as deep as you can.</p>
+  </header>
+
+  <div class="intro">
+    <h2>📜 About this quest line</h2>
+    <p>You'll build <b>one complete game</b> across 11 bite-sized quests — each a single 30–60 minute sitting that ends with a visible change on screen. The game, <b>Deep Delve</b>, is an idle/incremental miner: swing a pickaxe to mine ore, hire dwarves to auto-dig, smelt ore into ingots at the forge, and craft better tools that break into deeper, richer rock. Your headline goal is <b>Depth</b> — and as you dig, the camera literally sinks down the mine shaft.</p>
+    <p>You start in <b>Blueprints</b> (Unreal's visual scripting) for fast wins, then pivot to <b>C++</b> once the systems are real — the same journey a professional Unreal programmer takes. Art comes from the <b>Synty POLYGON Dungeon Realms</b> pack (dwarf miners, forge machinery, modular mine tiles, gems &amp; gold). Every quest below lists exactly which Unreal technology, tool or principle it teaches, with links to the official docs.</p>
+    <div class="stack" id="stack"></div>
+  </div>
+
+  <div class="hud">
+    <div class="row">
+      <div class="rank" id="rank">Prospector</div>
+      <div class="xpnum"><span id="xp">0</span> XP · <span id="donecount">0</span>/11 quests · <span id="techcount">0</span>/<span id="techtotal">0</span> tech learned</div>
+    </div>
+    <div class="bar"><div class="fill" id="fill"></div></div>
+    <div class="next" id="next"></div>
+    <div class="controls">
+      <button id="expandAll">Expand all</button>
+      <button id="collapseAll">Collapse all</button>
+      <button id="reset">Reset progress</button>
+    </div>
+  </div>
+
+  <div class="techmap">
+    <h3>🧭 Tech Map — everything you'll learn</h3>
+    <p class="cap">Each skill lights up when you complete the quest that teaches it. Click any skill to open its documentation.</p>
+    <div class="techgrid" id="techgrid"></div>
+  </div>
+
+  <div class="assetbox">
+    <h3>🎒 Asset Kit — Synty POLYGON Dungeon Realms</h3>
+    <p>1,100+ low-poly 3D prefabs: dwarf miners with pickaxes, dwarven forge machinery, modular mine walls/tiles/stairs, plus crystals, gems &amp; gold coins. It's a <b>3D model pack, not a UI kit</b> — Deep Delve uses it as a living 3D mine behind your interface, with icons captured from the meshes. Art is polish, not a blocker: use text buttons and a grey box mine until you're ready.</p>
+  </div>
+
+  <div id="quests"></div>
+
+  <div class="footer">Progress saves automatically on this device. Docs open on dev.epicgames.com. The theme is yours — dig how you like.</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const RANKS=[[0,"Prospector"],[100,"Pit Digger"],[350,"Miner"],[750,"Pit Foreman"],[1300,"Master Smith"],[2000,"Deeplord"]];
+
+// Canonical Unreal Engine 5.8 documentation (dev.epicgames.com), verified July 2026.
+const D="https://dev.epicgames.com/documentation/en-us/unreal-engine/";
+const DOCS={
+  editor:      D+"unreal-engine-5-8-documentation",
+  fab:         D+"fab-window-in-unreal-engine",
+  importing:   D+"importing-assets-directly-into-unreal-engine",
+  umg:         D+"creating-user-interfaces-with-umg-and-slate-in-unreal-engine",
+  umgQuick:    D+"umg-ui-designer-quick-start-guide-in-unreal-engine",
+  widgetBP:    D+"widget-blueprints-in-umg-for-unreal-engine",
+  umgAnim:     D+"animating-umg-widgets-in-unreal-engine",
+  framework:   D+"gameplay-framework-in-unreal-engine",
+  bp:          D+"blueprints-visual-scripting-in-unreal-engine",
+  bpIntro:     D+"introduction-to-blueprints-visual-scripting-in-unreal-engine",
+  bpOverview:  D+"overview-of-blueprints-visual-scripting-in-unreal-engine",
+  timers:      D+"gameplay-timers-in-unreal-engine",
+  structs:     D+"structs-in-unreal-engine",
+  dataDriven:  D+"data-driven-gameplay-elements-in-unreal-engine",
+  savegame:    D+"saving-and-loading-your-game-in-unreal-engine",
+  cppQuick:    D+"unreal-engine-cpp-quick-start",
+  cpp:         D+"programming-with-cplusplus-in-unreal-engine",
+  subsystems:  D+"programming-subsystems-in-unreal-engine",
+  liveCoding:  D+"using-live-coding-to-recompile-unreal-engine-applications-at-runtime",
+  datetime:    D+"API/Runtime/Core/Misc/FDateTime",
+  niagara:     D+"getting-started-in-niagara-effects-for-unreal-engine",
+  soundCue:    D+"sound-cues-in-unreal-engine",
+  packaging:   D+"packaging-your-project",
+  incremental: "https://en.wikipedia.org/wiki/Incremental_game"
+};
+
+const QUESTS=[
+ {n:1,t:"First Light",tag:"40–55 min · Setup & importing the Synty pack",xp:100,
+  brief:"Install Unreal, create your project, and import the Synty pack so the dwarves are ready to work. Base camp before the descent.",
+  concepts:"Epic Launcher · project templates · Editor layout · PIE · importing an asset pack · folder structure",
+  steps:["Install the Epic Games Launcher, then Unreal Engine 5.8 from the Library tab.",
+    "New project → Games → Blank. Blueprint, Desktop, Starter Content OFF. Name it DeepDelve.",
+    "Add POLYGON Dungeon Realms (Unreal version) via the Fab window / 'Add to Project', or copy the pack's Content into Content/Synty.",
+    "Open the pack's demo scene to confirm meshes/materials loaded; fly around with right-drag + WASD.",
+    "Make your own folders in Content/: UI, Blueprints, Data, Core (keep Synty content separate)."],
+  tech:[
+    {name:"Unreal Editor & Projects",what:"The tool you build everything in: Viewport, Content Browser, and Play-In-Editor (PIE).",doc:DOCS.editor},
+    {name:"Fab / Importing assets",what:"How marketplace packs like Synty get into your project — the Fab window and the Content Browser importer.",doc:DOCS.fab}
+  ],
+  milestone:"Project opens, the Synty demo scene renders dwarves and dungeon tiles, and your four folders exist.",
+  boss:"Search the Content Drawer and find the dwarf miner character and a forge machinery prop by name.",
+  reward:"Title Prospector · +100 XP · ☕ Coffee — you installed a AAA engine and a thousand dwarves.",
+  card:"Launcher · Blueprint vs C++ project · importing asset packs · Content Drawer search · PIE · Outliner"},
+ {n:2,t:"The Mine Awakens",tag:"50–60 min · UMG + 3D backdrop",xp:150,
+  brief:"Build the HUD (ore counter + DIG button) and drop a small 3D mine scene behind it so you're not staring at a blank screen.",
+  concepts:"UMG · Widget Blueprint · Canvas Panel · Add to Viewport · Camera Actor · Set View Target",
+  steps:["Build a mine mouth from Synty modular tiles, add torches and a dwarf miner. Place a Camera Actor framing it.",
+    "In Content/UI create WBP_Main. Add Txt_Ore (value 0, big) and a Button with a ⛏ DIG text child (Btn_Dig).",
+    "Level Blueprint → BeginPlay → Create Widget (WBP_Main) → Add to Viewport.",
+    "Set Input Mode Game And UI, Show Mouse Cursor, and Set View Target with Blend to your camera.",
+    "Play."],
+  tech:[
+    {name:"UMG (Unreal Motion Graphics)",what:"Unreal's UI system — this is the tech that implements all your on-screen interface (counters, buttons, panels).",doc:DOCS.umg},
+    {name:"Widget Blueprints",what:"The asset type where each UI screen is designed and scripted (WBP_Main is one).",doc:DOCS.widgetBP},
+    {name:"Gameplay Framework (GameMode / PlayerController)",what:"Owns input mode, mouse cursor, and the active camera; spawns your HUD at BeginPlay.",doc:DOCS.framework}
+  ],
+  milestone:"A big 0 and a DIG button sit over a real 3D dwarven mine (it doesn't dig yet).",
+  boss:"Move the camera and confirm the HUD stays put while the 3D scene changes — UI-space vs world-space.",
+  reward:"Title stays Prospector · +150 XP · 🍪 Snack break.",
+  card:"UMG · Widget Blueprint · Canvas Panel · Add to Viewport · Camera Actor · Set View Target · Input Mode"},
+ {n:3,t:"Swing the Pickaxe",tag:"30–45 min · Variables & events",xp:150,
+  brief:"The core verb: click the pickaxe, mine ore, number goes up. Your first event-driven Blueprint logic.",
+  concepts:"Variables (Int) · event graph · OnClicked · read/write variables · updating UI text",
+  steps:["In WBP_Main add an Integer Ore. Compile.",
+    "Select Btn_Dig → Details → Events → + On Clicked.",
+    "On the event: Increment Ore (+1 per swing).",
+    "Drag Txt_Ore in → Set Text (Text), feed it Ore. Wire after the increment.",
+    "Play and dig."],
+  tech:[
+    {name:"Blueprints Visual Scripting",what:"Unreal's node-based visual programming language — you'll write game logic here before touching C++.",doc:DOCS.bp},
+    {name:"Variables & Events",what:"Store state (the Ore variable) and react to things happening (the Button's OnClicked event).",doc:DOCS.bpIntro}
+  ],
+  milestone:"Every click, ore goes up. The heartbeat of the game exists.",
+  boss:"Add a 'power swing' button that adds 5, sharing the same Ore variable.",
+  reward:"Title Pit Digger · +150 XP · 🎵 One song, no guilt.",
+  card:"Variables (Int) · Compile · OnClicked · Set/Increment · Set Text · implicit conversion nodes"},
+ {n:4,t:"Rich Veins",tag:"45–60 min · Functions & formatting",xp:250,
+  brief:"Idle games run on gorgeous huge numbers. 1000000 is ugly; 1.0M is dopamine. Refactor into functions and write an ore formatter.",
+  concepts:"Functions & pure functions · Float vs Int · Branch · Format Text · DRY",
+  steps:["Change Ore to Float.",
+    "Create AddOre(Amount: Float) that adds to Ore and refreshes the UI. Route both dig buttons through it.",
+    "Create pure FormatNumber(Value)→Text: ≥1e9 'B', ≥1e6 'M', ≥1e3 'K', else raw. Round to 1 decimal.",
+    "Create RefreshUI that sets Txt_Ore to FormatNumber(Ore); call it from AddOre."],
+  tech:[
+    {name:"Blueprint Functions (pure & impure)",what:"Reusable logic blocks. AddOre changes state; FormatNumber is a 'pure' function that just returns a value.",doc:DOCS.bpOverview},
+    {name:"Data types & Text formatting",what:"Float vs Int for big idle numbers, and Format Text to display '1.5M' cleanly.",doc:DOCS.bp}
+  ],
+  milestone:"Past 1,000 shows 1.0K; past a million shows 1.0M.",
+  boss:"Feed FormatNumber 1500000 and confirm it prints 1.5M.",
+  reward:"+250 XP (pushes you toward Miner rank) · 🚶 5-minute walk.",
+  card:"Functions vs pure functions · Float · Branch · Format Text · rounding · single source of truth"},
+ {n:5,t:"Hire the Crew",tag:"45–60 min · Timers & GameInstance",xp:250,
+  brief:"The 'idle': dwarves that dig while you don't. Add ore-per-second and move core numbers into a GameInstance that outlives any screen.",
+  concepts:"GameInstance · Timers vs Event Tick · delta time · data/presentation separation",
+  steps:["Create Blueprint Class → GameInstance (BP_GameInstance). Set it in Project Settings → Maps & Modes.",
+    "Move Ore and add OrePerSecond (Float). Widget reads via Get Game Instance → Cast.",
+    "In Init, Set Timer by Function Name → Produce, 1.0s, looping. Produce calls AddOre(OrePerSecond).",
+    "Set OrePerSecond = 1; place dwarf miner meshes in the scene so the income has a face."],
+  tech:[
+    {name:"GameInstance",what:"A single object that holds game-wide state and survives level loads — the natural home for your economy.",doc:DOCS.framework},
+    {name:"Gameplay Timers",what:"Run a function on a schedule (Produce() once per second) instead of every frame — how idle income ticks.",doc:DOCS.timers}
+  ],
+  milestone:"Start the game, touch nothing — ore climbs on its own while the dwarves swing.",
+  boss:"Explain why a 1s Timer beats per-frame Tick here (fixed cadence, no delta math).",
+  reward:"Title Miner · +250 XP · 🎮 Play someone else's idle game 10 min, steal a UI idea.",
+  card:"GameInstance · Cast To · Set Timer by Function Name · looping timers · Event Tick · delta time"},
+ {n:6,t:"The Dig Deepens",tag:"~60 min (splittable) · Data-driven miners + Depth",xp:300,
+  brief:"The signature quest. Add buyable miners/machines (data-driven, rising costs) AND introduce Depth — the goal. As you dig, the camera descends the shaft through Synty tiles and deeper layers reveal richer ore.",
+  concepts:"Structs · Arrays · Data Tables · exponential cost curves · dynamic UMG · driving camera/world from a variable · tiered gating",
+  steps:["Struct S_Miner: DisplayName, BaseCost, CostGrowth (~1.15), BaseProduction, Owned.",
+    "Array of S_Miner with 3 entries (Dwarf Digger, Ore Cart, Drill Machine — use pack meshes).",
+    "Cost (pure fn): CurrentCost = BaseCost * (CostGrowth ^ Owned).",
+    "Reusable WBP_MinerRow with Setup(index); in WBP_Main loop the array into a Scroll Box (Create Widget → Setup → Add Child).",
+    "HIRE: if Ore ≥ cost → subtract, Owned++, recompute OrePerSecond, refresh.",
+    "Depth: float Depth = LifetimeOre / 500. Bind the mine camera's Z to Depth so it sinks. Add Txt_Depth + ore tiers (Copper 0m, Iron 100m, Silver 300m, Gold 700m, Mithril 1500m)."],
+  tech:[
+    {name:"Structs",what:"Define a custom data shape (S_Miner) that groups a miner's name, cost, production and owned count.",doc:DOCS.structs},
+    {name:"Data Tables & data-driven design",what:"Store all miners and depth tiers as editable data rows, so adding content means adding data — not code.",doc:DOCS.dataDriven},
+    {name:"Dynamic UMG (Create Widget + Scroll Box)",what:"Spawn a UI row per miner at runtime from your data and list them in a scrollable panel.",doc:DOCS.widgetBP},
+    {name:"Exponential cost curves & tiered gating (principle)",what:"The core idle-game math: cost = base·growth^owned, and content unlocked by Depth thresholds.",doc:DOCS.incremental}
+  ],
+  milestone:"Hire miners, ore/sec climbs, and the camera visibly sinks deeper with a live depth readout and changing ore tier.",
+  boss:"Add a 4th miner by adding ONE data row and no new nodes. If it just works, your design is right.",
+  reward:"Title Pit Foreman · +300 XP · 🍕 A proper meal. You built a mine and a goal.",
+  card:"Struct · Array · Data Table · exponential cost scaling · dynamic widgets · Scroll Box · driving world state from a variable · tiered gating"},
+ {n:7,t:"The Forge & the Anvil",tag:"50–60 min · Processing & crafting",xp:300,
+  brief:"The other two pillars: smelt raw ore into ingots at the forge (resource conversion), then craft better pickaxes/tools that multiply dig power and unlock deeper, harder rock.",
+  concepts:"Enums · one-time Booleans · resource conversion · global multipliers · Depth gating · affordability UI",
+  steps:["Add Ingots (Float) and a Smelt action: convert N ore into 1 ingot (Synty forge machinery as the smelter).",
+    "Struct S_Tool: Name, IngotCost, Type (enum SwingPower/GlobalYield/DepthUnlock), Value, Crafted (Bool). Add a few.",
+    "Add SwingMultiplier, YieldMultiplier (default 1) and MaxDepthAllowed. Apply them to swing/per-second/Depth cap.",
+    "Craft: if enough ingots & not crafted → spend, set Crafted, apply effect (multiplier or raise MaxDepthAllowed), disable button.",
+    "Tint/enable craft buttons by affordability."],
+  tech:[
+    {name:"Enumerations & Booleans",what:"An enum names the tool's effect type (SwingPower / GlobalYield / DepthUnlock); a Bool tracks one-time 'Crafted' state.",doc:DOCS.bp},
+    {name:"Resource conversion & multipliers (principle)",what:"A second economy loop (ore→ingots) plus stacking multipliers — classic incremental progression design.",doc:DOCS.incremental}
+  ],
+  milestone:"Smelt ore into ingots, craft an Iron Pickaxe that boosts digging, and a tool that unlocks a deeper layer you couldn't reach.",
+  boss:"Confirm a tool can't be crafted twice, and that hitting the depth cap stops you until you craft the unlock.",
+  reward:"Title stays Pit Foreman · +300 XP · 🎧 Music + stretch. All three pillars are in.",
+  card:"Enums · Booleans / one-time crafts · resource conversion · multiplier stacking · Depth gating · SetIsEnabled"},
+ {n:8,t:"Memory Core",tag:"45–60 min · Save & Load",xp:300,
+  brief:"A miner who loses progress on quit is a sad miner. Persist everything so the shaft survives closing the game.",
+  concepts:"SaveGame object · Save/Load to Slot · serializing arrays & structs · timestamp",
+  steps:["Blueprint Class → SaveGame (SG_DeepDelve). Mirror: Ore, Ingots, Depth, LifetimeOre, miner array, tool array, MaxDepthAllowed, LastSavedTime.",
+    "SaveGame: Create Save Game Object → copy state → LastSavedTime = UtcNow → Save Game to Slot ('DeepDelve',0).",
+    "LoadGame: Does Save Game Exist → Load → Cast → copy back → recompute per-second.",
+    "Call LoadGame on Init; SaveGame on a 10s timer + a manual Save button."],
+  tech:[
+    {name:"SaveGame system",what:"Unreal's built-in persistence: a USaveGame object plus Save/Load Game to Slot writes your progress to disk.",doc:DOCS.savegame}
+  ],
+  milestone:"Hire miners, craft a tool, fully close the game, reopen — everything's still there at the same depth.",
+  boss:"Delete the save (or use a fresh slot) and confirm a clean first-run still works.",
+  reward:"Title Keeper of the Deep · +300 XP · 😴 Guilt-free early stop — you shipped persistence.",
+  card:"USaveGame · Save/Load Game to/from Slot · Does Save Game Exist · serialization · UTC timestamp"},
+ {n:9,t:"Into the Code",tag:"~60 min · First C++",xp:350,
+  brief:"The pivot to C++. Add C++ to the project and move the mining/processing/depth math into a C++ subsystem, called from your Blueprints. Blueprint = view, C++ = model.",
+  concepts:"C++ setup · UCLASS/UPROPERTY/UFUNCTION · BlueprintCallable · GameInstanceSubsystem · Live Coding",
+  steps:["Install Visual Studio 2022 ('Game development with C++') or Xcode on macOS. Tools → New C++ Class.",
+    "Create a GameInstanceSubsystem: UMineSubsystem.",
+    "Expose doubles Ore/Ingots/Depth/OrePerSecond (BlueprintReadOnly) and BlueprintCallable Dig, TryHireMiner, TryCraftTool, Smelt + BlueprintPure FormatNumber.",
+    "Implement the math in .cpp; Compile via Live Coding (Ctrl+Alt+F11).",
+    "In BP: Get Game Instance Subsystem (MineSubsystem) → call the C++ functions; delete duplicated BP math."],
+  tech:[
+    {name:"Programming with C++ (C++ Quick Start)",what:"Set up the toolchain and write your first Unreal C++ class — the industry-standard way to build UE systems.",doc:DOCS.cppQuick},
+    {name:"Reflection macros: UCLASS / UPROPERTY / UFUNCTION",what:"The macros that expose C++ classes, variables and functions to Blueprint and the editor (e.g. BlueprintCallable).",doc:DOCS.cpp},
+    {name:"Subsystems (GameInstanceSubsystem)",what:"An auto-instanced, managed home for your C++ economy code — cleaner than subclassing engine classes.",doc:DOCS.subsystems},
+    {name:"Live Coding",what:"Recompile C++ (Ctrl+Alt+F11) while the editor and game keep running — fast iteration.",doc:DOCS.liveCoding}
+  ],
+  milestone:"Game plays identically, but digging, hiring, smelting and depth now run through C++. You can hit a breakpoint in your own game.",
+  boss:"Change a C++ formula, Live Coding, see the running game update without a full restart.",
+  reward:"Title Master Smith · +350 XP · 🏆 Big one — you bridged Blueprint and C++.",
+  card:"C++ setup · UCLASS/UPROPERTY/UFUNCTION · BlueprintCallable/Pure/ReadOnly · GameInstanceSubsystem · Live Coding · model/view split"},
+ {n:10,t:"Cave-In",tag:"~60 min · Prestige & offline (C++)",xp:400,
+  brief:"The two mechanics that make an idle game unstoppable: prestige (collapse the shaft, reset, keep a permanent bonus) and offline earnings. Both in C++, both use time math.",
+  concepts:"Meta-progression · FDateTime/FTimespan · offline cap · balancing · reward popups",
+  steps:["Offline: on load read LastSavedTime, get FDateTime::UtcNow(), compute elapsed FTimespan. Grant OrePerSecond*seconds, capped (~8h). Fire a 'while you slept' popup.",
+    "Cave-In: add DwarvenRenown. CaveIn() computes renown from LifetimeOre (floor(sqrt(LifetimeOre/1e6))), adds it, resets ore/ingots/miners/tools/depth.",
+    "Apply permanent 1 + Renown*0.02 multiplier to all yield.",
+    "Add a COLLAPSE SHAFT button (enabled past a depth threshold) + renown readout. Save DwarvenRenown."],
+  tech:[
+    {name:"Date & Time (FDateTime / FTimespan)",what:"Unreal's time classes — compare the saved timestamp to now to compute offline earnings.",doc:DOCS.datetime},
+    {name:"Prestige / meta-progression (principle)",what:"Reset-for-permanent-bonus loops (Dwarven Renown) that keep long-term play compelling.",doc:DOCS.incremental}
+  ],
+  milestone:"Close for a few minutes → reopen → offline ore. Collapse the shaft → everything resets but you're permanently stronger.",
+  boss:"After a cave-in, confirm LifetimeOre/Renown persisted while current ore reset to zero.",
+  reward:"Title Deeplord · +400 XP · 🎉 A genuinely complete game loop.",
+  card:"FDateTime/FTimespan · UtcNow · offline cap · prestige / meta-progression · permanent multipliers · popups"},
+ {n:11,t:"Strike It Rich",tag:"~60 min · Juice & packaging",xp:400,
+  brief:"Make it feel good, then package it into something you can double-click and hand to a friend. 'Done' means shipped.",
+  concepts:"UMG animations · Audio / Sound Cues · floating popups · Niagara (optional) · packaging a shipping build",
+  steps:["Juice: UMG scale-punch on DIG; a floating '+N ore' that drifts up and fades; play a dwarf mining animation on dig.",
+    "Sound: import a pick-strike and forge clang → Sound Cues → Play Sound 2D on dig/smelt.",
+    "Optional: a small Niagara rock-dust/sparks burst at the strike, glinting crystals deeper down.",
+    "Package: Platforms → Windows → Package Project (Shipping config). Run the produced .exe outside the editor."],
+  tech:[
+    {name:"UMG Animations",what:"Keyframed widget animations (scale-punch, floating '+N') that make clicks feel satisfying.",doc:DOCS.umgAnim},
+    {name:"Audio & Sound Cues",what:"The node-based audio asset that plays your pick-strike and forge clang.",doc:DOCS.soundCue},
+    {name:"Niagara VFX",what:"Unreal's particle system — rock-dust and spark bursts on each strike.",doc:DOCS.niagara},
+    {name:"Packaging & Shipping",what:"Cook and build your project into a standalone .exe anyone can run.",doc:DOCS.packaging}
+  ],
+  milestone:"A standalone Deep Delve executable with sound, dust, and descending depth — playable by anyone.",
+  boss:"Does the packaged build dig, auto-mine, smelt, craft, save, go deeper, and cave-in with sound? If yes: you made a game.",
+  reward:"Title Deeplord, Shaper of the Deep · +400 XP · 🏅 QUEST LINE COMPLETE. Send the build to a friend.",
+  card:"UMG animations · Sound Cue · Play Sound 2D · Niagara basics · Shipping config · Package Project"}
+];
+
+// ---- Tech stack chips (intro) ----
+const STACK=["Unreal Engine 5.8","Blueprints","C++","UMG UI","GameInstance & Subsystems","Data Tables","SaveGame","Timers","Niagara VFX","Audio","Packaging","Synty POLYGON Dungeon Realms"];
+
+let done = load();
+function load(){ try{ return JSON.parse(localStorage.getItem('deepdelve_done')||'{}'); }catch(e){ return {}; } }
+function save(){ localStorage.setItem('deepdelve_done', JSON.stringify(done)); }
+
+function totalXP(){ return QUESTS.reduce((s,q)=> s + (done[q.n]?q.xp:0), 0); }
+function rankFor(xp){ let r=RANKS[0]; for(const x of RANKS){ if(xp>=x[0]) r=x; } return r; }
+function nextRank(xp){ for(const x of RANKS){ if(xp<x[0]) return x; } return null; }
+function isUnlocked(n){ return n===1 || done[n-1]===true; }
+
+// flat list of all tech with the quest that teaches it
+function allTech(){ const out=[]; QUESTS.forEach(q=> (q.tech||[]).forEach(t=> out.push({...t,q:q.n}))); return out; }
+
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function renderStack(){
+  document.getElementById('stack').innerHTML = STACK.map(s=>`<span>${esc(s)}</span>`).join('');
+}
+
+function renderTechMap(){
+  const tech=allTech();
+  document.getElementById('techtotal').textContent=tech.length;
+  const grid=document.getElementById('techgrid');
+  grid.innerHTML = tech.map(t=>{
+    const learned = done[t.q]===true;
+    return `<div class="techchip${learned?' learned':''}" title="${esc(t.what)}">
+      <span class="dot">${learned?'✓':''}</span>
+      <a href="${t.doc}" target="_blank" rel="noopener">${esc(t.name)}</a>
+      <span class="q">Q${t.q}</span>
+    </div>`;
+  }).join('');
+  const learnedCount = tech.filter(t=>done[t.q]===true).length;
+  document.getElementById('techcount').textContent=learnedCount;
+}
+
+function renderHUD(){
+  const xp=totalXP(), r=rankFor(xp), nx=nextRank(xp);
+  document.getElementById('xp').textContent=xp;
+  document.getElementById('rank').textContent=r[1];
+  document.getElementById('donecount').textContent=Object.values(done).filter(Boolean).length;
+  const maxXP=RANKS[RANKS.length-1][0];
+  const pct=Math.min(100, Math.round(xp/maxXP*100));
+  document.getElementById('fill').style.width=pct+'%';
+  document.getElementById('next').textContent = nx ? `${nx[0]-xp} XP to ${nx[1]}` : 'Max rank — Deeplord. You have reached the bottom of the world.';
+}
+
+function renderQuests(){
+  const c=document.getElementById('quests'); c.innerHTML='';
+  QUESTS.forEach(q=>{
+    const unlocked=isUnlocked(q.n), isDone=done[q.n]===true;
+    const el=document.createElement('div');
+    el.className='quest'+(isDone?' done':'')+(unlocked?'':' locked');
+    el.dataset.n=q.n;
+    const stepsHtml=q.steps.map(s=>`<li>${esc(s)}</li>`).join('');
+    const techHtml=(q.tech||[]).map(t=>`<li><span class="tn">${esc(t.name)}</span> — <span class="tw">${esc(t.what)}</span><br><a class="dl" href="${t.doc}" target="_blank" rel="noopener">📖 Documentation ↗</a></li>`).join('');
+    el.innerHTML=`
+      <div class="qhead">
+        <div class="chk">${isDone?'✓':''}</div>
+        <div class="qmeta">
+          <p class="qtitle">Quest ${q.n} — ${esc(q.t)} ${unlocked?'':'🔒'}</p>
+          <p class="qtag">${esc(q.tag)}</p>
+        </div>
+        <div class="qxp">+${q.xp} XP</div>
+        <div class="caret">▶</div>
+      </div>
+      <div class="qbody">
+        ${unlocked?'':`<p class="locknote">🔒 Locked. Complete Quest ${q.n-1} to unlock.</p>`}
+        <h4>Brief</h4><p>${esc(q.brief)}</p>
+        <h4>🛠️ Teaches (tech, tools &amp; principles)</h4><ul class="teaches">${techHtml}</ul>
+        <h4>Concepts in play</h4><p class="concepts">${esc(q.concepts)}</p>
+        <h4>Steps</h4><ol>${stepsHtml}</ol>
+        <h4>🏁 Milestone</h4><div class="milestone">${esc(q.milestone)}</div>
+        <h4>🧪 Boss check</h4><p>${esc(q.boss)}</p>
+        <h4>🎁 Reward</h4><div class="reward">${esc(q.reward)}</div>
+        <h4>🗂️ Knowledge card</h4><div class="card">${esc(q.card)}</div>
+      </div>`;
+    el.querySelector('.qhead').addEventListener('click',(e)=>{
+      if(e.target.classList.contains('chk')) return;
+      el.classList.toggle('open');
+    });
+    el.querySelector('.chk').addEventListener('click',(e)=>{
+      e.stopPropagation();
+      if(!isUnlocked(q.n)){ toast(`🔒 Finish Quest ${q.n-1} first`); return; }
+      if(done[q.n]){ delete done[q.n]; }
+      else { done[q.n]=true; celebrate(q); }
+      save(); refresh();
+    });
+    c.appendChild(el);
+  });
+}
+
+let openState={};
+function snapshotOpen(){ openState={}; document.querySelectorAll('.quest.open').forEach(el=>openState[el.dataset.n]=true); }
+function restoreOpen(){ document.querySelectorAll('.quest').forEach(el=>{ if(openState[el.dataset.n]) el.classList.add('open'); }); }
+function refresh(){ snapshotOpen(); renderQuests(); restoreOpen(); renderHUD(); renderTechMap(); }
+
+function celebrate(q){
+  const xp=totalXP(); const before=xp-q.xp;
+  const rBefore=rankFor(before)[1], rAfter=rankFor(xp)[1];
+  const nTech=(q.tech||[]).length;
+  if(rBefore!==rAfter) toast(`⛏️ Rank up! You are now ${rAfter} — ${nTech} new skill${nTech===1?'':'s'} learned`);
+  else toast(`✅ Quest ${q.n} complete! +${q.xp} XP · ${nTech} skill${nTech===1?'':'s'} unlocked`);
+}
+
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast'); t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer); toastTimer=setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+document.getElementById('expandAll').onclick=()=>document.querySelectorAll('.quest').forEach(e=>e.classList.add('open'));
+document.getElementById('collapseAll').onclick=()=>document.querySelectorAll('.quest').forEach(e=>e.classList.remove('open'));
+document.getElementById('reset').onclick=()=>{ if(confirm('Reset all quest progress? This cannot be undone.')){ done={}; save(); refresh(); toast('Progress reset — a new shaft begins'); } };
+
+renderStack(); renderQuests(); renderHUD(); renderTechMap();
+</script>
+</body>
+</html>
