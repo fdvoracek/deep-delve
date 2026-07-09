@@ -148,7 +148,7 @@ h1 .pick{color:var(--gold)}
 
   <div id="quests"></div>
 
-  <div class="footer">Quests 1–9 are fully refined; 10–12 are drafts still being designed. Your progress is saved in this browser on this device and survives shutdowns; use Export/Import to move it. Docs open on dev.epicgames.com.</div>
+  <div class="footer">Quests 1–8 are fully refined; 9–12 are drafts still being designed. Your progress is saved in this browser on this device and survives shutdowns; use Export/Import to move it. Docs open on dev.epicgames.com.</div>
 </div>
 <div class="toast" id="toast"></div>
 
@@ -329,8 +329,8 @@ const QUESTS=[
   opt:[{n:"Impact-synced hits",d:"Use an Anim Notify on the swing's impact frame to deal damage exactly when the pick strikes.",doc:DOCS.animNotify}],
   card:"Data Assets (miners) · Skeletal Mesh Animation · Gameplay Timers · interface reuse · shared current-target reference"},
 
- {n:9,t:"Memory Core",tag:"~45–55 min · Save & Load",xp:250,
-  brief:"Persist everything so the mine survives closing the game. Thanks to the tech tree, nearly all progress is one thing: the node levels.",
+ {n:9,t:"Memory Core",tag:"~45–55 min · Save & Load",xp:250,draft:true,
+  brief:"DRAFT — being refined. Persist everything so the mine survives closing the game. Thanks to the tech tree, nearly all progress is one thing: the node levels.",
   tech:[
     {name:"SaveGame system",what:"A USaveGame object + Save/Load Game to Slot writes your progress to disk.",doc:DOCS.savegame}
   ],

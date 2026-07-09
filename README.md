@@ -12,7 +12,7 @@ You build **one complete game** across a series of bite-sized quests — each a 
 
 You start in **Blueprints** (Unreal's visual scripting) for fast wins, then pivot to **C++** once the systems are real — the same journey a professional Unreal programmer takes. Architecture is first-class here: the player's damage lives on the Player Controller, rocks and pickaxes are Data Assets, clicks travel through a Blueprint Interface, and every upgrade flows through one data-driven tech tree.
 
-> **Status:** Quests 1–9 are fully refined; Quests 10–12 are drafts still being designed.
+> **Status:** Quests 1–8 are fully refined; Quests 9–12 are drafts still being designed.
 
 ---
 

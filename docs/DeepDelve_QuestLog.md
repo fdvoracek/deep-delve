@@ -13,7 +13,7 @@ You'll build **one complete game** across a series of bite-sized quests — each
 
 You start in **Blueprints** for fast wins, then pivot to **C++** once the systems are real. Architecture is first-class here: the player's damage lives on the Player Controller, rocks and pickaxes are Data Assets, clicks travel through a Blueprint Interface, and every upgrade flows through one data-driven tech tree.
 
-> **Status:** Quests 1–9 are fully refined; Quests 10–12 are drafts still being designed.
+> **Status:** Quests 1–8 are fully refined; Quests 9–12 are drafts still being designed.
 
 ### The technology stack
 
@@ -175,8 +175,8 @@ A "Hire Dwarf" tech node spawns a visible animated dwarf who mines the rock on a
 
 ---
 
-## QUEST 9 — Memory Core 💾 · ~45–55 min
-Persist everything so the mine survives closing the game. Nearly all progress is one thing: the tech-tree node levels.
+## QUEST 9 — Memory Core 💾 · ~45–55 min · 🚧 DRAFT
+*Still being designed — provisional.* Persist everything so the mine survives closing the game. Nearly all progress is one thing: the tech-tree node levels.
 
 🛠️ **Teaches:**
 - **[SaveGame system](https://dev.epicgames.com/documentation/en-us/unreal-engine/saving-and-loading-your-game-in-unreal-engine)** — a `USaveGame` + Save/Load Game to Slot.
