@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Deep Delve — C++-First Path</title>
+<style>
+:root{ color-scheme: light;
+  --bg:#0c1410; --panel:#12201a; --panel2:#173026; --ink:#e9f5ee; --muted:#9dc3ad;
+  --cpp:#8fd694; --ember:#6fe0a8; --line:#25402f;
+}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;background:radial-gradient(1200px 700px at 50% -12%, #14301f 0%, #0c1410 62%);color:var(--ink)}
+.wrap{max-width:860px;margin:0 auto;padding:30px 20px 80px}
+a{color:var(--cpp);text-decoration:none} a:hover{text-decoration:underline}
+.back{font-size:12.5px;color:var(--muted)}
+header{text-align:center;margin:12px 0 20px}
+h1{font-size:30px;margin:0 0 6px} h1 .g{color:var(--cpp)}
+.sub{color:var(--muted);font-size:14px;margin:0}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 22px;margin:0 0 18px}
+.panel h2{margin:0 0 8px;font-size:15px;color:var(--cpp);letter-spacing:.3px}
+.panel p{margin:0 0 10px;font-size:14px;line-height:1.65} .panel p:last-child{margin-bottom:0} .panel b{color:var(--cpp)}
+.panel code{background:var(--panel2);border:1px solid var(--line);border-radius:5px;padding:1px 5px;font-size:12.5px}
+.cta{display:inline-block;background:var(--cpp);color:#082014;font-weight:700;padding:11px 18px;border-radius:10px;margin:6px 8px 6px 0;font-size:14px}
+.cta.alt{background:var(--panel2);color:var(--cpp);border:1px solid var(--line)}
+.cta:hover{text-decoration:none;filter:brightness(1.05)}
+ol.arc{margin:6px 0;padding-left:22px;font-size:14px;line-height:1.7}
+ol.arc .soon{color:var(--muted)}
+.tag{display:inline-block;font-size:10px;font-weight:700;letter-spacing:.4px;padding:1px 7px;border-radius:20px;margin-left:6px;background:rgba(143,214,148,.14);color:var(--cpp);border:1px solid rgba(143,214,148,.4)}
+.footer{text-align:center;color:var(--muted);font-size:12px;margin-top:26px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="../">← Deep Delve hub</a>
+  <header>
+    <h1><span class="g">{ }</span> Deep Delve — C++-First</h1>
+    <p class="sub">Build the whole game in C++ from Quest 1, with thin Blueprints that only assign data.</p>
+  </header>
+
+  <div class="panel">
+    <h2>The working pattern</h2>
+    <p>Every system is a <b>C++ class</b>. You then create a <b>Blueprint subclass</b> (<code>BP_…</code> / <code>WBP_…</code>) whose only job is to <b>assign values</b> to the class's <code>UPROPERTY</code>s — meshes, sounds, input assets, and <code>UPrimaryDataAsset</code> references — and to drop the actor into the level. UMG uses C++ <code>UUserWidget</code> bases with <code>meta=(BindWidget)</code> controls and <code>WBP_</code> layouts. Data lives in <code>DA_</code> assets.</p>
+    <p>The full quest log spells out, per quest: the <b>C++ classes &amp; methods</b> created/updated, the matching <b>Blueprints</b>, and a <b>UPROPERTY → value</b> table for what you assign in each Blueprint.</p>
+    <p>
+      <a class="cta" href="https://github.com/fdvoracek/deep-delve/blob/main/docs/cpp/DeepDelve_CPP_QuestLog.md" target="_blank" rel="noopener">📖 Open the full quest log (rendered) ↗</a>
+      <a class="cta alt" href="DeepDelve_CPP_QuestLog.md">Raw file</a>
+    </p>
+  </div>
+
+  <div class="panel">
+    <h2>The arc</h2>
+    <ol class="arc">
+      <li>Foundations &amp; First Class — C++ project, Rider, migrate Synty, <code>ADeepDelveGameMode</code> <span class="tag">detailed</span></li>
+      <li>The Player &amp; Enhanced Input — <code>ADeepDelvePlayerController</code>, <code>Damage</code>, <code>IA_Dig</code> <span class="tag">detailed</span></li>
+      <li>The Rock &amp; the Interface — <code>IMineable</code>, <code>AOreVein</code>, first sounds <span class="tag">detailed</span></li>
+      <li>Coins &amp; the Economy Subsystem — <code>UMineEconomySubsystem</code>, <code>ACoin</code>, <code>UHUDWidget</code> <span class="tag">detailed</span></li>
+      <li>Data-Driven Content — <code>URockData</code>, <code>UPickaxeData</code> <span class="tag">detailed</span></li>
+      <li class="soon">Tech Tree — Model (<code>UTechNode</code>, polymorphic <code>UTechEffect</code>)</li>
+      <li class="soon">Tech Tree — UI (<code>UTechTreeWidget</code>)</li>
+      <li class="soon">Hire the Crew (<code>ADwarf</code>, <code>UMinerData</code>)</li>
+      <li class="soon">Menus &amp; Level Flow (<code>UMenuWidget</code>)</li>
+      <li class="soon">Save &amp; Load (<code>UDeepDelveSaveGame</code>)</li>
+      <li class="soon">Ship a Demo</li>
+      <li class="soon">Pickaxe upgrades (auto-swing, crits)</li>
+      <li class="soon">The Growing Crew</li>
+      <li class="soon">Rich Veins (<code>AMineral</code>)</li>
+      <li class="soon">The Coin Collector (<code>ACollectorDwarf</code>)</li>
+      <li class="soon">Strike It Rich — juice, Niagara, Shipping v1.0</li>
+    </ol>
+    <p style="font-size:12.5px;color:var(--muted)">Quests 1–5 are fully specified in the quest log; 6–16 arrive in the next batches. An interactive checklist tracker (like the Blueprints path) will be generated once all quests are written.</p>
+  </div>
+
+  <div class="footer">Prefer a gentler start? Try the <a href="../blueprints/">Blueprints-first path</a>.</div>
+</div>
+</body>
+</html>

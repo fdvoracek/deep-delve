@@ -3,7 +3,7 @@
 > A gamified path from zero Unreal experience to a finished, shippable game.
 > **Project:** an idle / incremental mining game called **Deep Delve**.
 > **Engine:** Unreal Engine 5.8 · **Path:** Blueprints → C++ · **Art:** Synty POLYGON Dungeon Realms.
-> **Live tracker:** https://fdvoracek.github.io/deep-delve/
+> **Live tracker:** https://fdvoracek.github.io/deep-delve/blueprints/
 
 ---
 
