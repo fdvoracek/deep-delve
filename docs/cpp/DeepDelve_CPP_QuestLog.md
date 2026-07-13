@@ -26,19 +26,19 @@ Each quest below lists: the **C++ classes/methods** created or updated, the **Bl
 3. **The Rock & the Interface** — `IMineable`, `AOreVein`, click→`TakeDamage`, first sounds
 4. **Coins & the Economy Subsystem** — `UMineEconomySubsystem`, `ACoin`, `UHUDWidget`, damage numbers
 5. **Data-Driven Content** — `URockData`, `UPickaxeData` (+ `DA_` instances)
-6. Tech Tree — Model (`UTechNode`, polymorphic `UTechEffect`, Buy/Apply) *(Batch 2)*
-7. Tech Tree — UI (`UTechTreeWidget`/`UTechNodeWidget`) *(Batch 2)*
-8. Hire the Crew (`ADwarf`, `UMinerData`) *(Batch 2)*
-9. Menus & Level Flow (`UMenuWidget`) *(Batch 2)*
-10. Save & Load (`UDeepDelveSaveGame`) *(Batch 2)*
-11. Ship a Demo *(Batch 3)*
-12. Pickaxe upgrades (auto-swing, crits) *(Batch 3)*
-13. The Growing Crew *(Batch 3)*
-14. Rich Veins (`AMineral`) *(Batch 3)*
-15. The Coin Collector (`ACollectorDwarf`) *(Batch 3)*
-16. Strike It Rich (juice, Niagara, Shipping v1.0) *(Batch 3)*
+6. Tech Tree — Model (`UTechNode`, polymorphic `UTechEffect`, Buy/Apply)
+7. Tech Tree — UI (`UTechTreeWidget`/`UTechNodeWidget`)
+8. Hire the Crew (`ADwarf`, `UMinerData`)
+9. Menus & Level Flow (`UMenuWidget`)
+10. Save & Load (`UDeepDelveSaveGame`)
+11. Ship a Demo
+12. Pickaxe upgrades (auto-swing, crits)
+13. The Growing Crew
+14. Rich Veins (`AMineral`)
+15. The Coin Collector (`ACollectorDwarf`)
+16. Strike It Rich (juice, Niagara, Shipping v1.0)
 
-> **Status:** Quests 1–5 fully specified below. Quests 6–16 arrive in Batches 2–3.
+> **Status:** all 16 quests specified below (first migration pass — to be refined next).
 
 ---
 
@@ -442,6 +442,371 @@ UPROPERTY(EditAnywhere, Category="Stats") TObjectPtr<UPickaxeData> EquippedPicka
 
 ---
 
-*Batches 2 (Q6–10) and 3 (Q11–16) follow — tech tree, crew, menus, save/load, demo, upgrades, veins, collector, and the v1.0 finale, all in C++ with matching Blueprints.*
+# QUEST 6 — Tech Tree: the Model · ~65 min
 
-*Engine: Unreal Engine 5.8 · IDE: Rider · Art: Synty POLYGON Dungeon Realms · Docs: dev.epicgames.com*
+**Goal.** A data-driven tech tree with a **polymorphic `UTechEffect`** hierarchy that drives every upgrade. All gameplay modifiers live on the economy subsystem so effects only touch one object.
+
+🎮 **After:** you can buy the first three nodes (via a temporary button, UI comes next quest): Sharpen Pickaxe → Iron Pickaxe → Descend.
+
+### 🧩 C++ classes & methods
+**Create `UTechEffect : UObject`** (base — instanced, inline-editable, so each node owns its effect object):
+```cpp
+UCLASS(Abstract, EditInlineNew, DefaultToInstanced, BlueprintType)
+class DEEPDELVE_API UTechEffect : public UObject
+{
+    GENERATED_BODY()
+public:
+    UFUNCTION() virtual void Apply(class UMineEconomySubsystem* Econ, int32 NewLevel) {}
+};
+```
+**Create subclasses** (each with its own `UPROPERTY` params + `Apply` override):
+```cpp
+UCLASS() class UTechEffect_UpgradePickaxeDamage : public UTechEffect { GENERATED_BODY()
+  UPROPERTY(EditAnywhere) float AmountPerLevel = 1.f;
+  virtual void Apply(UMineEconomySubsystem* Econ, int32 NewLevel) override; }; // Econ->PickaxeDamageBonus += AmountPerLevel;
+UCLASS() class UTechEffect_EquipPickaxe : public UTechEffect { GENERATED_BODY()
+  UPROPERTY(EditAnywhere) TObjectPtr<class UPickaxeData> Pickaxe;
+  virtual void Apply(...) override; }; // Econ->EquippedPickaxe = Pickaxe;
+UCLASS() class UTechEffect_Descend : public UTechEffect { GENERATED_BODY()
+  UPROPERTY(EditAnywhere) TObjectPtr<class URockData> NextRock;
+  virtual void Apply(...) override; }; // Econ->SetCurrentRock(NextRock); (also nudges the camera)
+```
+**Create `UTechNode : UPrimaryDataAsset`:**
+```cpp
+UPROPERTY(EditAnywhere) FName NodeId;
+UPROPERTY(EditAnywhere) FText DisplayName;
+UPROPERTY(EditAnywhere) FText Description;
+UPROPERTY(EditAnywhere) TObjectPtr<UTexture2D> Icon;
+UPROPERTY(EditAnywhere) int32 Cost = 10;
+UPROPERTY(EditAnywhere) float CostGrowth = 1.15f;
+UPROPERTY(EditAnywhere) bool bRepeatable = false;
+UPROPERTY(EditAnywhere) int32 MaxLevel = 1;
+UPROPERTY(EditAnywhere) TArray<TObjectPtr<UTechNode>> Prerequisites;
+UPROPERTY(EditAnywhere) FVector2D GridPosition;
+UPROPERTY(EditAnywhere, Instanced) TObjectPtr<UTechEffect> Effect;   // inline effect object
+```
+**Update `UMineEconomySubsystem`** — tech state + gameplay fields effects write to:
+```cpp
+UPROPERTY() TMap<FName,int32> NodeLevels;
+UPROPERTY(BlueprintReadOnly) float PickaxeDamageBonus = 0.f;
+UPROPERTY(BlueprintReadOnly) TObjectPtr<UPickaxeData> EquippedPickaxe;
+UPROPERTY(BlueprintReadOnly) TObjectPtr<URockData> CurrentRock;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTechChanged);
+UPROPERTY(BlueprintAssignable) FOnTechChanged OnTechChanged;
+
+UFUNCTION(BlueprintCallable) int32 GetNodeLevel(UTechNode* Node) const;
+UFUNCTION(BlueprintCallable) int32 GetCost(UTechNode* Node) const;      // Cost * CostGrowth^level
+UFUNCTION(BlueprintCallable) bool  CanBuy(UTechNode* Node) const;       // prereqs met, not maxed, Coins>=cost
+UFUNCTION(BlueprintCallable) bool  TryBuy(UTechNode* Node);             // spend, level++, Effect->Apply, broadcast
+```
+The player's effective damage becomes `EquippedPickaxe->Damage + Econ->PickaxeDamageBonus`.
+
+### 🔵 Data Assets to create (no BP subclasses — effects are inline on the node)
+- `DA_Node_Sharpen` (`UTechNode`), `DA_Node_IronPick`, `DA_Node_Descend`.
+
+### 🎛️ UPROPERTY → values
+| Data Asset | Field | Value |
+|---|---|---|
+| `DA_Node_Sharpen` | `bRepeatable` / `Cost` / `CostGrowth` | `true` / `10` / `1.15` |
+| `DA_Node_Sharpen` | `Effect` | `UTechEffect_UpgradePickaxeDamage` (AmountPerLevel `1`) |
+| `DA_Node_IronPick` | `Prerequisites` / `Cost` | `[DA_Node_Sharpen]` / `100` |
+| `DA_Node_IronPick` | `Effect` | `UTechEffect_EquipPickaxe` (Pickaxe = `DA_SturdyPick`) |
+| `DA_Node_Descend` | `Prerequisites` / `Cost` | `[DA_Node_IronPick]` / `250` |
+| `DA_Node_Descend` | `Effect` | `UTechEffect_Descend` (NextRock = `DA_IronVein`) |
+
+🏁 **Milestone:** buying the three nodes (temporary button → `TryBuy`) sharpens, equips, and descends. 🧪 **Boss:** add a 4th node as a `DA_` + one new effect subclass. 🎁 **Reward:** Pit Foreman · +300 XP.
+💡 *Gotcha:* mark `UTechEffect` `EditInlineNew` + `DefaultToInstanced` and the node's `Effect` property `Instanced`, or you can't create effect objects inline on the Data Asset.
+
+---
+
+# QUEST 7 — Tech Tree: the UI · ~60 min
+
+**Goal.** A real tech-tree screen built from C++ `UUserWidget` bases + `WBP_` layouts.
+
+🎮 **After:** a screen of connected nodes that light up when affordable and check off when bought.
+
+### 🧩 C++ classes & methods
+**`UTechNodeWidget : UUserWidget`**
+```cpp
+UPROPERTY(meta=(BindWidget)) TObjectPtr<class UButton> BuyButton;
+UPROPERTY(meta=(BindWidget)) TObjectPtr<class UImage> IconImage;
+UPROPERTY(meta=(BindWidget)) TObjectPtr<class UTextBlock> NameText, CostText;
+UPROPERTY() TObjectPtr<UTechNode> Node;
+void Setup(UTechNode* InNode);   // fill icon/name; bind BuyButton->OnClicked
+UFUNCTION() void OnBuyClicked(); // Econ->TryBuy(Node)
+UFUNCTION() void Refresh();      // colour by CanBuy/owned/maxed; SetIsEnabled
+```
+**`UTechTreeWidget : UUserWidget`**
+```cpp
+UPROPERTY(meta=(BindWidget)) TObjectPtr<class UCanvasPanel> Canvas;
+UPROPERTY(EditDefaultsOnly) TSubclassOf<UTechNodeWidget> NodeWidgetClass;
+UPROPERTY(EditDefaultsOnly) TArray<TObjectPtr<UTechNode>> AllNodes;
+virtual void NativeConstruct() override;  // spawn a node widget per AllNodes at GridPosition; bind Econ->OnTechChanged -> RefreshAll
+virtual int32 NativePaint(...) const override; // draw connector lines from each node's Prerequisites
+```
+
+### 🔵 Blueprints
+- **`WBP_TechNode`** (parent `UTechNodeWidget`) — layout with widgets named `BuyButton`, `IconImage`, `NameText`, `CostText`.
+- **`WBP_TechTree`** (parent `UTechTreeWidget`) — a Canvas Panel named `Canvas`.
+
+### 🎛️ UPROPERTY → values
+| Widget | Field | Value |
+|---|---|---|
+| `WBP_TechTree` | `NodeWidgetClass` | `WBP_TechNode` |
+| `WBP_TechTree` | `AllNodes` | `[DA_Node_Sharpen, DA_Node_IronPick, DA_Node_Descend]` |
+
+🏁 **Milestone:** the visual tree; click affordable nodes to buy. 🧪 **Boss:** add the 4th node's `GridPosition`+prereq and see it wired with no layout code. 🎁 **Reward:** Pit Foreman · +300 XP.
+
+---
+
+# QUEST 8 — Hire the Crew · ~60 min
+
+**Goal.** An animated `ADwarf` that mines the rock on a timer via the `IMineable` interface, hired through a tech node.
+
+🎮 **After:** buy "Hire Dwarf" → a dwarf appears and mines the rock on his own.
+
+### 🧩 C++ classes & methods
+**`UMinerData : UPrimaryDataAsset`** — `USkeletalMesh* Mesh; TObjectPtr<UAnimationAsset> MineAnim; float Damage; float Speed;`
+**`ADwarf : AActor`**
+```cpp
+UPROPERTY(VisibleAnywhere) TObjectPtr<USkeletalMeshComponent> Mesh;
+UPROPERTY(EditAnywhere) TObjectPtr<UMinerData> MinerData;
+UPROPERTY(EditAnywhere) TObjectPtr<USoundBase> HitSound;
+FTimerHandle SwingTimer;
+virtual void BeginPlay() override;  // set skeletal mesh + play MineAnim; start looping timer at MinerData->Speed
+void Swing();                       // Econ->CurrentRockActor -> IMineable::Execute_TakeDamage(rock, MinerData->Damage * Econ->CrewDamageMult); PlaySound2D; spawn damage number
+```
+**`UTechEffect_HireMiner : UTechEffect`** — `TObjectPtr<UMinerData> Miner; TSubclassOf<ADwarf> DwarfClass;` → `Apply` calls `Econ->SpawnDwarf(DwarfClass, Miner)`.
+**Update `UMineEconomySubsystem`** — `TObjectPtr<AActor> CurrentRockActor; float CrewDamageMult = 1.f;` + `void SpawnDwarf(TSubclassOf<ADwarf>, UMinerData*)` (spawns at a ring slot). `AOreVein::BeginPlay` registers itself as `CurrentRockActor`.
+
+### 🔵 Blueprints / Data
+- **`BP_Dwarf`** (parent `ADwarf`), **`DA_Dwarf1`** (`UMinerData`), **`DA_Node_HireDwarf`** (`UTechNode`, repeatable).
+
+### 🎛️ UPROPERTY → values
+| Asset | Field | Value |
+|---|---|---|
+| `DA_Dwarf1` | `Mesh` / `MineAnim` / `Damage` / `Speed` | Synty dwarf skeletal mesh / mining anim / `1` / `1.0` |
+| `BP_Dwarf` | `MinerData` / `HitSound` | `DA_Dwarf1` / `S_RockHit` |
+| `DA_Node_HireDwarf` | `Effect` | `UTechEffect_HireMiner` (Miner=`DA_Dwarf1`, DwarfClass=`BP_Dwarf`) |
+
+🏁 **Milestone:** a hired dwarf mines hands-free. 🧪 **Boss:** hire two; both damage the rock independently. 🎁 **Reward:** Master Smith · +300 XP.
+
+---
+
+# QUEST 9 — Menus & Level Flow · ~55 min
+
+**Goal.** A Main Menu level and an Esc pause menu, driven by a C++ `UMenuWidget`.
+
+🎮 **After:** the game boots to a title screen (New Game / Quit); Esc pauses in the mine.
+
+### 🧩 C++ classes & methods
+**`UMenuWidget : UUserWidget`**
+```cpp
+UFUNCTION(BlueprintCallable) void NewGame();       // Econ->ResetToDefaults(); UGameplayStatics::OpenLevel("Mine")
+UFUNCTION(BlueprintCallable) void Continue();      // (Q10) Econ->LoadGame(); OpenLevel("Mine")
+UFUNCTION(BlueprintCallable) void QuitToMenu();    // OpenLevel("MainMenu")
+UFUNCTION(BlueprintCallable) void QuitGame();      // UKismetSystemLibrary::QuitGame
+```
+**Update `ADeepDelvePlayerController`** — add `IA_Pause`; on it, create/remove a pause widget, `SetInputMode`, `SetPause(true/false)`; expose `TSubclassOf<UMenuWidget> PauseMenuClass` (`EditDefaultsOnly`). A tiny `AMainMenuController`/level-BP creates `WBP_MainMenu` in the MainMenu map.
+**Update `UMineEconomySubsystem`** — `void ResetToDefaults()` (clears Coins/Depth/NodeLevels/dwarves).
+
+### 🔵 Blueprints / Levels
+- **`WBP_MainMenu`**, **`WBP_PauseMenu`** (parent `UMenuWidget`), a **MainMenu** level. Set **Game Default Map = MainMenu**.
+
+### 🎛️ UPROPERTY → values
+| Asset | Field | Value |
+|---|---|---|
+| `BP_MineController` | `IA_Pause` | `IA_Pause` (Esc) |
+| `BP_MineController` | `PauseMenuClass` | `WBP_PauseMenu` |
+
+🏁 **Milestone:** title → New Game → mine; Esc pauses/returns. 🧪 **Boss:** New Game twice; the second run is fresh (`ResetToDefaults`). 🎁 **Reward:** Master Smith · +250 XP.
+
+---
+
+# QUEST 10 — Save & Load · ~60 min
+
+**Goal.** A `USaveGame` subclass + save/load in the subsystem that **reconstructs the world** (dwarves, tier, pickaxe).
+
+🎮 **After:** quit, relaunch, Continue → everything is back.
+
+### 🧩 C++ classes & methods
+**`UDeepDelveSaveGame : USaveGame`**
+```cpp
+UPROPERTY() int32 SaveVersion = 1;
+UPROPERTY() double Coins = 0, Depth = 0;
+UPROPERTY() TMap<FName,int32> NodeLevels;
+UPROPERTY() int32 DwarfCount = 0;
+UPROPERTY() FString CurrentRockId, EquippedPickaxeId; // primary-asset ids
+UPROPERTY() FDateTime LastSavedTime;
+```
+**Update `UMineEconomySubsystem`**
+```cpp
+UFUNCTION(BlueprintCallable) void SaveGame();   // CreateSaveGameObject -> copy state -> SaveGameToSlot("DeepDelve",0)
+UFUNCTION(BlueprintCallable) void LoadGame();   // DoesSaveGameExist -> LoadGameFromSlot -> Cast -> copy -> RebuildWorld()
+UFUNCTION(BlueprintCallable) bool HasSave() const;
+void RebuildWorld();                            // re-spawn DwarfCount dwarves, set CurrentRock/EquippedPickaxe, broadcast OnTechChanged/OnCoinsChanged
+```
+Wire `UMenuWidget::Continue` (enabled only if `HasSave()`); `NewGame` calls `ResetToDefaults` **and** `UGameplayStatics::DeleteGameInSlot`. Autosave on a repeating timer.
+
+### 🔵 Blueprints
+- None new (the `USaveGame` subclass is used directly from C++). Wire the menu buttons' events to the C++ `UFUNCTION`s.
+
+### 🎛️ UPROPERTY → values
+*(none — save state is code; slot name is a constant)*
+
+🏁 **Milestone:** relaunch → Continue → dwarves + depth restored. 🧪 **Boss:** delete the save; a clean first-run still works. 🎁 **Reward:** Master Smith · +300 XP.
+💡 *Gotcha:* bump `SaveVersion` and default missing fields on load — later quests add fields and old saves must not crash.
+
+---
+
+# QUEST 11 — Ship a Demo · ~45 min
+
+**Goal.** Package the C++ build and send it to a friend.
+
+🎮 **After:** a standalone Deep Delve demo a friend can run with no Unreal installed.
+
+### 🧩 C++ work
+- None new. (Because this is a C++ project, packaging now requires the toolchain — but the packaged build is self-contained; recipients need nothing.)
+
+### Steps
+1. Confirm Game Default Map = MainMenu, project name/icon set.
+2. **Platforms → Windows → Package Project**, config **Development**.
+3. Test the packaged `.exe`: new game → upgrade → save → quit → relaunch → Continue.
+4. Zip + share (Drive/WeTransfer).
+
+🏁 **Milestone:** a shippable demo. 🧪 **Boss:** run it on a clean folder/machine, full cycle. 🎁 **Reward:** Master Smith · +250 XP · 🎉
+💡 *Tune the economy* (Cost/CostGrowth on the tech nodes) using your friend's feedback before adding content.
+
+---
+
+# QUEST 12 — Pickaxe Upgrades: Auto-Swing & Crits · ~55 min
+
+**Goal.** New `UTechEffect` subclasses that add an auto-swing and critical hits.
+
+🎮 **After:** the pickaxe swings on its own and occasionally lands a gold "CRIT!".
+
+### 🧩 C++ classes & methods
+**New `UTechEffect` subclasses:** `UTechEffect_UnlockAutoSwing`, `UTechEffect_UpgradeSwingSpeed`, `UTechEffect_UnlockCrit`, `UTechEffect_UpgradeCritChance` — each writes a field on the subsystem.
+**Update `UMineEconomySubsystem`:** `bool bAutoSwing; float AutoSwingInterval=1.f; float CritChance=0; float CritMultiplier=5.f;` + an auto-swing timer that damages `CurrentRockActor`.
+**Update `ADeepDelvePlayerController::OnDig` (and auto-swing):** roll `FMath::FRand() < CritChance` → multiply damage by `CritMultiplier`; play crit sound (`UPROPERTY TObjectPtr<USoundBase> CritSound`); spawn a crit-styled damage number.
+
+### 🔵 Blueprints / Data
+- `DA_Node_AutoSwing`, `DA_Node_SwingSpeed`, `DA_Node_CritStrike`, `DA_Node_CritChance` (`UTechNode`s). `WBP_DamageNumber` crit variant.
+
+### 🎛️ UPROPERTY → values
+| Asset | Field | Value |
+|---|---|---|
+| `DA_Node_SwingSpeed` | `Effect` (repeatable) | `UTechEffect_UpgradeSwingSpeed` (e.g. −0.1s/level) |
+| `DA_Node_CritChance` | `Effect` (repeatable) | `UTechEffect_UpgradeCritChance` (+5%/level) |
+| `BP_MineController` | `CritSound` | `S_Crit` |
+
+🏁 **Milestone:** hands-free swings + flashy crits. 🧪 **Boss:** `CritChance = 1.0` → every hit crits. 🎁 **Reward:** Deeplord · +300 XP.
+
+---
+
+# QUEST 13 — The Growing Crew · ~50 min
+
+**Goal.** Global crew multipliers that update live dwarves.
+
+🎮 **After:** buy a bigger, harder-hitting, faster crew; existing dwarves speed up at once.
+
+### 🧩 C++ classes & methods
+**New effects:** `UTechEffect_UpgradeCrewDamage`, `UTechEffect_UpgradeCrewSpeed` → `Econ->CrewDamageMult`/`CrewSpeedMult`.
+**Update `UMineEconomySubsystem`:** `float CrewSpeedMult=1.f;` + `DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCrewStatsChanged) OnCrewStatsChanged;` broadcast on change.
+**Update `ADwarf`:** bind `Econ->OnCrewStatsChanged` in BeginPlay → recompute damage and **reset `SwingTimer`** with the new interval (`MinerData->Speed / CrewSpeedMult`).
+
+### 🔵 Data
+- `DA_Node_CrewDamage`, `DA_Node_CrewSpeed` (`UTechNode`s). Optional new `UMinerData` dwarf tiers + hire nodes.
+
+🏁 **Milestone:** upgrades ramp all dwarves live. 🧪 **Boss:** buy Crew Speed twice with several dwarves; all speed up. 🎁 **Reward:** Deeplord · +300 XP.
+
+---
+
+# QUEST 14 — Rich Veins · ~55 min
+
+**Goal.** Yield upgrade, new vein tiers, and a lucky mineral drop.
+
+🎮 **After:** richer tiers as you descend, multiplied payouts, and occasional jackpot gems.
+
+### 🧩 C++ classes & methods
+**New effect:** `UTechEffect_UpgradeYield` → `Econ->CoinMult += Amount`.
+**`AMineral : ACoin`** (inherits `Collect()`; higher `Value`, gem mesh) — or just a `BP_Mineral` subclass of `ACoin`.
+**Update `AOreVein`:** apply `Econ->CoinMult` to coin count; add `UPROPERTY float MineralChance=0.02f; int32 MineralValue=100; TSubclassOf<ACoin> MineralClass;` → on break, roll `MineralChance` → spawn a mineral. Add more `URockData` tiers + `UTechEffect_Descend` nodes.
+
+### 🔵 Blueprints / Data
+- **`BP_Mineral`** (parent `ACoin`). New `DA_` rock tiers (Silver/Gold/Mithril), `DA_Node_Yield`, `DA_Node_Descend_*`.
+
+### 🎛️ UPROPERTY → values
+| Asset | Field | Value |
+|---|---|---|
+| `BP_Mineral` | `Mesh` / `Value` | Synty gem mesh / `100` |
+| `BP_OreVein` | `MineralClass` / `MineralChance` | `BP_Mineral` / `0.02` |
+
+🏁 **Milestone:** richer tiers + jackpot gems. 🧪 **Boss:** `MineralChance = 1.0`, descend a couple tiers, confirm deeper pays more. 🎁 **Reward:** Deeplord · +350 XP.
+💡 *Balance:* deeper tiers should raise `CoinReward` faster than `MaxHP`.
+
+---
+
+# QUEST 15 — The Coin Collector · ~55 min
+
+**Goal.** A walking dwarf that auto-collects coins/minerals by overlap.
+
+🎮 **After:** a dwarf strolls across the mine hoovering up coins on its own.
+
+### 🧩 C++ classes & methods
+**`ACollectorDwarf : AActor`**
+```cpp
+UPROPERTY(VisibleAnywhere) TObjectPtr<USkeletalMeshComponent> Mesh;
+UPROPERTY(VisibleAnywhere) TObjectPtr<class USphereComponent> Reach; // Generate Overlap Events = true
+UPROPERTY(EditAnywhere) float Speed = 200.f;
+UPROPERTY(EditAnywhere) float LeftX, RightX; // sweep bounds
+virtual void Tick(float Dt) override;        // move left by Speed*Dt (× Econ->CollectorSpeedMult); wrap at LeftX
+UFUNCTION() void OnReachOverlap(...);        // if Cast<ACoin>(Other) -> Coin->Collect();
+```
+**New effects:** `UTechEffect_HireCollector`, `UTechEffect_UpgradeCollectorSpeed`. **Update subsystem:** `float CollectorSpeedMult=1.f;` + spawn collectors.
+Make `ACoin::Collect()` **public** (already) so overlap can call it.
+
+### 🔵 Blueprints / Data
+- **`BP_Collector`** (parent `ACollectorDwarf`), `DA_Node_HireCollector`, `DA_Node_CollectorSpeed`.
+
+### 🎛️ UPROPERTY → values
+| Asset | Field | Value |
+|---|---|---|
+| `BP_Collector` | `Mesh` / walk anim / `Speed` | Synty dwarf / walk anim / `200` |
+| `BP_Collector` | `Reach` | Sphere, **Generate Overlap Events = true**, overlaps coins |
+
+🏁 **Milestone:** the collector auto-sweeps coins. 🧪 **Boss:** pile coins; confirm it sweeps them; buy a second collector. 🎁 **Reward:** Deeplord · +300 XP.
+💡 *Gotcha:* overlap needs **Generate Overlap Events = true on BOTH** the sphere and the coin, with responses set to overlap.
+
+---
+
+# QUEST 16 — Strike It Rich · ~60 min · *finale*
+
+**Goal.** Juice (animation, Niagara, Sound Cues) + a polished **Shipping** v1.0.
+
+🎮 **After:** a polished standalone v1.0 — clicks punch, coins ching, crits boom, dust and sparks fly.
+
+### 🧩 C++ classes & methods
+- Add `UPROPERTY(EditAnywhere) TObjectPtr<class UNiagaraSystem> BreakVFX;` to `AOreVein` (and dust/spark VFX to crits, mineral shimmer, coin poof); spawn via `UNiagaraFunctionLibrary::SpawnSystemAtLocation`. Add `"Niagara"` to `Build.cs`.
+- Optionally convert the raw `Play Sound 2D` calls to **Sound Cues** (still `USoundBase` UPROPERTYs — just assign a `SoundCue` instead of a `SoundWave`).
+
+### 🔵 Blueprints
+- Assign Niagara systems + Sound Cues on the relevant `BP_`/data assets; author UMG animations in `WBP_HUD`/`WBP_TechNode` (DIG punch, purchase pop, unlock flourish).
+
+### 🎛️ UPROPERTY → values
+| Asset | Field | Value |
+|---|---|---|
+| `BP_OreVein` | `BreakVFX` | a Niagara dust burst |
+| `BP_Coin` | `PickupSound` | `SC_CoinPickup` (Sound Cue) |
+
+### Steps
+1. UMG animations; Niagara bursts; ambient/music.
+2. Set icon/splash/name; **Shipping** config; **Package**; test end-to-end; share (friend or itch.io).
+
+🏁 **Milestone:** a polished, playable v1.0. 🧪 **Boss:** the Shipping build plays the whole game with sound + effects. 🎁 **Reward:** **Deeplord, Shaper of the Deep** · +400 XP · 🏅 QUEST LINE COMPLETE.
+
+**🎓 What to learn next:** Gameplay Ability System (GAS), replication & multiplayer, and AI / Behavior Trees.
+
+---
+
+*Engine: Unreal Engine 5.8 · IDE: Rider · Art: Synty POLYGON Dungeon Realms · Docs: dev.epicgames.com. This is a first migration pass of the C++-first chain — to be refined next.*
