@@ -21,13 +21,21 @@ The page is fully self-contained: the complete quest log is embedded and rendere
 
 ```
 docs/
-├── index.html               ← the interactive quest tracker (GitHub Pages serves this)
-└── DeepDelve_QuestLog.md     ← the quest log (also embedded in index.html)
+├── index.html                    ← the interactive quest tracker (GitHub Pages serves this)
+├── DeepDelve_QuestLog.md         ← the quest log (also embedded in index.html)
+└── architecture/                 ← architecture diagrams (also embedded in index.html)
+    ├── quest-1.svg … quest-16.svg   architecture after each quest (new pieces in gold)
+    └── final.svg                    the complete class diagram
 ```
+
+Each quest card in the tracker shows the architecture diagram for that quest inline, and the finished architecture appears at the top of the page — all embedded in `index.html`, so the page stays self-contained. The standalone `.svg` files in `docs/architecture/` are the same diagrams for viewing/linking on their own.
 
 Hosting: GitHub Pages, **Deploy from a branch → main → `/docs`**.
 
-`build_cpp_index.js` re-embeds `docs/DeepDelve_QuestLog.md` into `docs/index.html` after you edit the log, keeping the self-contained page in sync.
+Build helpers (run after editing content):
+
+- `build_cpp_index.js` re-embeds `docs/DeepDelve_QuestLog.md` into `docs/index.html`, keeping the self-contained page in sync.
+- `build_diagrams.py` regenerates all `docs/architecture-*.svg` files and re-injects them into `docs/index.html`. Run it, then run `build_cpp_index.js`.
 
 ## 🎓 Further learning
 
