@@ -13,14 +13,7 @@ For every class we build:
 
 Each quest lists: **📚 Teaches** (+ resources), **🎮 After this quest**, **💡 Why**, **🏛️ Patterns & principles**, **🔑 Key nodes / functions**, the **C++ classes & methods**, the matching **Blueprints**, a **UPROPERTY → value** table, **Steps**, and Milestone/Boss/Reward.
 
-## 🧱 C++ ground rules (they apply in *every* quest)
-
-The code snippets show *what* to write, not boilerplate. These four rules recur constantly — assume them throughout instead of repeating them each quest:
-
-1. **Add an `#include` for every type you reference.** For each `U…`/`A…`/`F…` type in a snippet, include its header (Rider will offer the fix). You'll commonly need: `EnhancedInputSubsystems.h`, `EnhancedInputComponent.h`, `InputMappingContext.h`, `InputAction.h`, `Kismet/GameplayStatics.h`, `Camera/CameraActor.h`, `Components/StaticMeshComponent.h`, `Components/SkeletalMeshComponent.h`, `Components/SphereComponent.h`, `Blueprint/UserWidget.h`, `NiagaraFunctionLibrary.h`.
-2. **Every actor creates its components in the constructor.** A `UPROPERTY() TObjectPtr<U…Component> Foo;` is only a pointer. In the constructor do `Foo = CreateDefaultSubobject<U…Component>(TEXT("Foo"));` and set `RootComponent = Foo;` (or attach it to the root). Skip this and the component is null → the actor is invisible, has no collision, and `Foo->…` crashes.
-3. **Reaching the Economy Subsystem (the `Econ` pointer).** From an **Actor** *or* a **UserWidget**: `Econ = GetGameInstance()->GetSubsystem<UMineEconomySubsystem>();`. Cache it in a `UPROPERTY() TObjectPtr<UMineEconomySubsystem> Econ;` member, set in `BeginPlay`/`NativeConstruct`, and guard `if (!Econ) return;`. Every `Econ->…` in the quests assumes you did this once.
-4. **Enhanced Input must be the project default.** Enable the *Enhanced Input* plugin and set **Project Settings → Engine → Input → Default Classes** to `EnhancedInputComponent` + `EnhancedPlayerInput`, or `Cast<UEnhancedInputComponent>(InputComponent)` returns null and input silently does nothing (first bites in Q2).
+> **A note on recurring rules.** The code snippets show *what* to write, not boilerplate. A handful of habits recur in every quest — adding includes, creating components in the constructor, reaching the economy subsystem, and guarding editor-assignable references. Each is introduced (as a **📌 Rule from here on** box) in the quest where it *first* applies; once you've met it, apply it in every later quest without being reminded.
 
 ## 🏛️ Architecture & patterns you'll learn
 
@@ -149,10 +142,12 @@ void ADeepDelvePlayerController::OnDig(){ UE_LOG(LogTemp, Warning, TEXT("Dig! %.
 ```
 Add `"EnhancedInput"` to `PublicDependencyModuleNames` in `DeepDelve.Build.cs`. `MiningContext`/`DigAction` are `TObjectPtr` **`UPROPERTY`s**, so the GC keeps the assigned assets alive.
 
-> **Includes & setup (easy to miss — see ground rules):** in the `.cpp` add `#include "EnhancedInputSubsystems.h"`, `"EnhancedInputComponent.h"`, `"InputMappingContext.h"`, `"InputAction.h"`; forward-declare `class UInputMappingContext; class UInputAction;` in the header. Then confirm **Project Settings → Engine → Input → Default Classes** are the Enhanced Input ones — otherwise `Cast<UEnhancedInputComponent>(InputComponent)` is null and clicking logs nothing.
+> **📌 Rule from here on — includes & Enhanced Input defaults.** Two habits you'll reuse in every later quest (stated once, here, where they first bite):
+> - **Add an `#include` for every `U…`/`A…`/`F…` type you reference** — the snippets show *what* to write, not headers (Rider offers the fix). Here that's `EnhancedInputSubsystems.h`, `EnhancedInputComponent.h`, `InputMappingContext.h`, `InputAction.h`; and forward-declare `class UInputMappingContext; class UInputAction;` in the header.
+> - **Enhanced Input must be the project default:** enable the *Enhanced Input* plugin and set **Project Settings → Engine → Input → Default Classes** to `EnhancedInputComponent` + `EnhancedPlayerInput`, or `Cast<UEnhancedInputComponent>(InputComponent)` is null and clicking logs nothing.
 
 ### 🔵 Blueprints to create
-- **`BP_MineController`** (parent `ADeepDelvePlayerController`). Create input assets **`IMC_Mining`** + **`IA_Dig`** (map `IA_Dig` → Left Mouse Button in `IMC_Mining`). Set **`BP_DeepDelveGameMode` → Player Controller Class = `BP_MineController`**.
+- **`BP_MineController`** (parent `ADeepDelvePlayerController`). Create input assets **`IMC_Mining`** + **`IA_Dig`** (map `IA_Dig` → Left Mouse Button in `IMC_Mining`; add a **Pressed** trigger to `IA_Dig` so one click = one dig — without it, holding LMB fires `OnDig` every frame, i.e. hold-to-mine). Set **`BP_DeepDelveGameMode` → Player Controller Class = `BP_MineController`**.
 
 ### 🎛️ UPROPERTY → values (on `BP_MineController`)
 | UPROPERTY | Assign |
@@ -218,6 +213,10 @@ if (GetHitResultUnderCursor(ECC_Visibility, false, Hit))
         IMineable::Execute_MineHit(A, Damage);
 ```
 
+> **📌 Rule from here on — components & guarding references.** Two habits every actor and quest reuses (stated once, here, where the first actor + first asset refs appear):
+> - **Create components in the constructor.** A `UPROPERTY() TObjectPtr<U…Component> Foo;` is only a pointer; in the constructor do `Foo = CreateDefaultSubobject<U…Component>(TEXT("Foo"));` and set `RootComponent = Foo;` (or attach to the root). Skip it and the actor is invisible, has no collision, and `Foo->…` crashes. (`AOreVein::Mesh` is the first case.)
+> - **Guard every editor-assignable reference and fail soft.** Any `UPROPERTY` pointing at an asset / class / Data Asset / effect (`TObjectPtr<>`, `TSubclassOf<>`, `Instanced`, resolved `TSoftObjectPtr`) can be left blank in the editor — null-check before dereferencing (`if (!Ref) { /* optional UE_LOG */ return; }`) and skip rather than crash (a packaged build has no console). `RespawnClass`/`HitSound`/`BreakSound` are the first such refs. (Unset Niagara/Sound refs are safe no-ops — no guard needed.)
+
 ### 🔵 Blueprint to create
 - **`BP_OreVein`** (parent `AOreVein`); place in the `Mine` level. Import `S_RockHit`, `S_RockBreak`.
 
@@ -238,7 +237,7 @@ if (GetHitResultUnderCursor(ECC_Visibility, false, Hit))
 🏁 **Milestone:** ten clicks break the rock (with sound) and a new one appears.
 🧪 **Boss check:** set `MaxHP = 20` in the BP → it takes 20 clicks.
 🎁 **Reward:** Title stays **Pit Digger** · +200 XP.
-💡 **Notes & gotchas:** the rock needs collision the cursor trace can hit (default Synty mesh collision blocking Visibility is fine). Guard interface calls with `Implements<UMineable>()` so a mis-click on scenery is a no-op, not a crash. **Create the `Mesh` component in the constructor and set it as `RootComponent`** — a declared component `UPROPERTY` is null until you do (this holds for every actor from here on). **Naming:** the interface method is deliberately called `MineHit`, **not** `TakeDamage` — `AActor` already has a built-in `TakeDamage`, and reusing that name causes hidden-function warnings. Every damage source (player, dwarves Q8, auto-swing Q12) calls `IMineable::Execute_MineHit`. **Sounds:** the Synty pack ships no `S_RockHit`/`S_RockBreak`; import any short SFX or use placeholders.
+💡 **Notes & gotchas:** the rock needs collision the cursor trace can hit (default Synty mesh collision blocking Visibility is fine). Guard interface calls with `Implements<UMineable>()` so a mis-click on scenery is a no-op, not a crash. **Naming:** the interface method is deliberately called `MineHit`, **not** `TakeDamage` — `AActor` already has a built-in `TakeDamage`, and reusing that name causes hidden-function warnings. Every damage source (player, dwarves Q8, auto-swing Q12) calls `IMineable::Execute_MineHit`. **Sounds:** the Synty pack ships no `S_RockHit`/`S_RockBreak`; import any short SFX or use placeholders.
 
 ---
 
@@ -273,6 +272,7 @@ UFUNCTION(BlueprintCallable) void AddCoins(double A);          // Coins+=A; OnCo
 UFUNCTION(BlueprintCallable) void AddDepth(double A);
 UFUNCTION(BlueprintCallable) void ReportDamage(FVector Where, float Amount, bool bCrit); // OnDamageDealt.Broadcast(...)
 ```
+> **📌 Rule from here on — reaching the subsystem (`Econ`).** From an **Actor** *or* a **UserWidget**: `Econ = GetGameInstance()->GetSubsystem<UMineEconomySubsystem>();`. Cache it in a `UPROPERTY() TObjectPtr<UMineEconomySubsystem> Econ;` member set in `BeginPlay`/`NativeConstruct`, and guard `if (!Econ) return;`. Every `Econ->…` from here on assumes you did this once — the controller, HUD, ore vein, coins, dwarves and collector all reach the economy this way.
 **`UMineStatics : UBlueprintFunctionLibrary`** — `UFUNCTION(BlueprintPure) static FText FormatNumber(double Value);` (1500 → "1.5K"; `FText` keeps it localizable).
 **`ACoin : AActor`** — `UPROPERTY(VisibleAnywhere) TObjectPtr<UStaticMeshComponent> Mesh;` (**create it in the constructor and set as `RootComponent`**; Simulate Physics in BP); `int32 Value=1; float LaunchImpulse=300; float Lifespan=30;` `UPROPERTY(EditAnywhere) TObjectPtr<USoundBase> PickupSound;` `BeginPlay` (random `AddImpulse`, `SetLifeSpan`); `NotifyActorBeginCursorOver` → `Collect()`; **`void Collect();`** (subsystem `AddCoins(Value)`; `PlaySound2D`; `Destroy`) — **keep `Collect()` public** (the collector reuses it in Q15).
 **`UHUDWidget : UUserWidget`** — owns the damage-number view so gameplay stays UI-free:
@@ -286,13 +286,13 @@ UFUNCTION() void Refresh();                // CoinsText/DepthText via UMineStati
 UFUNCTION() void OnDamage(FVector Where, float Amount, bool bCrit); // spawn a UDamageNumberWidget, Setup(Amount,bCrit), AddToViewport(), then SetPositionInViewport(ProjectWorldLocationToScreen(Where))
 ```
 **`UDamageNumberWidget : UUserWidget`** — the floating-number view (this is what `DamageNumberClass` points at). `UFUNCTION(BlueprintImplementableEvent) void Setup(float Amount, bool bCrit);` — the WBP reads `Amount`/`bCrit` to show the value and colour it (gold + bigger when `bCrit`). Without this `Setup` hook the spawned widget has no way to know what to display, so **you must add it** (the Q12 crit styling depends on it).
-**Update `AOreVein`** — `UPROPERTY(EditAnywhere) int32 CoinReward=10; UPROPERTY(EditAnywhere) TSubclassOf<ACoin> CoinClass;` **cache `Econ` in `BeginPlay`** (ground rule 3 — the ore vein needs it too); the break branch loops `CoinReward`→`SpawnActor<ACoin>`, then `Econ->AddDepth(1)`.
+**Update `AOreVein`** — `UPROPERTY(EditAnywhere) int32 CoinReward=10; UPROPERTY(EditAnywhere) TSubclassOf<ACoin> CoinClass;` **cache `Econ` in `BeginPlay`** (per the rule above — the ore vein needs it too); the break branch loops `CoinReward`→`SpawnActor<ACoin>`, then `Econ->AddDepth(1)`.
 **Update `ADeepDelvePlayerController`** — in `BeginPlay` set `bEnableMouseOverEvents=true` and create the HUD: `CreateWidget<UHUDWidget>(this, HUDClass)->AddToViewport();` (`UPROPERTY(EditDefaultsOnly) TSubclassOf<UHUDWidget> HUDClass;`) — **`AddToViewport()` is required or the HUD exists but never shows.** `OnDig` **reports** the hit: after `Execute_MineHit`, call `Econ->ReportDamage(Hit.ImpactPoint, Damage, false)` — the controller never spawns UI itself.
 
 > **Build.cs:** the first `UUserWidget` (`UHUDWidget`) means adding **`"UMG"`, `"Slate"`, `"SlateCore"`** to `PublicDependencyModuleNames` — or nothing UMG-related compiles.
 
 ### 🔵 Blueprints to create
-- **`BP_Coin`** (parent `ACoin`), **`WBP_HUD`** (parent `UHUDWidget`), **`WBP_DamageNumber`** (parent **`UDamageNumberWidget`**; float-up+fade animation, driven by the `Setup(Amount,bCrit)` event).
+- **`BP_Coin`** (parent `ACoin`), **`WBP_HUD`** (parent `UHUDWidget`), **`WBP_DamageNumber`** (parent **`UDamageNumberWidget`**; float-up+fade animation, driven by the `Setup(Amount,bCrit)` event; **on the animation's Finished event call `Remove from Parent`** so numbers don't pile up in the viewport).
 
 ### 🎛️ UPROPERTY → values
 | Class | UPROPERTY | Assign |
@@ -313,7 +313,7 @@ UFUNCTION() void OnDamage(FVector Where, float Amount, bool bCrit); // spawn a U
 🏁 **Milestone:** break → coins burst → hover to collect → HUD climbs, Depth ticks, damage numbers float.
 🧪 **Boss check:** a coin credits exactly once and the HUD total matches.
 🎁 **Reward:** Title **Miner** · +200 XP.
-💡 **Notes & gotchas:** `BindWidget` requires the `WBP_HUD` widget names to **exactly match** the C++ members. Coins auto-clean via `SetLifeSpan`. **Create `ACoin`'s `Mesh` in the constructor (root)**, and **cache the subsystem once** per the ground rules (`Econ = GetGameInstance()->GetSubsystem<UMineEconomySubsystem>();` — actors and widgets both use `GetGameInstance()`). Cursor-over on coins needs `bEnableMouseOverEvents` (set here) **and** coin collision that the cursor trace can hit. **Optimization to remember (Q16):** spawning/destroying many coins churns memory — an [Object Pool](https://gameprogrammingpatterns.com/object-pool.html) reuses them (see [UE performance considerations](https://dev.epicgames.com/documentation/en-us/unreal-engine/common-memory-and-cpu-performance-considerations-in-unreal-engine)). Consider caching the subsystem pointer instead of re-fetching it each hit.
+💡 **Notes & gotchas:** `BindWidget` requires the `WBP_HUD` widget names to **exactly match** the C++ members. Coins auto-clean via `SetLifeSpan`. **Create `ACoin`'s `Mesh` in the constructor (root)**, and **cache the subsystem once** (see the rule above; actors and widgets both use `GetGameInstance()`). Cursor-over on coins needs `bEnableMouseOverEvents` (set here) **and** coin collision that the cursor trace can hit. **Optimization to remember (Q16):** spawning/destroying many coins churns memory — an [Object Pool](https://gameprogrammingpatterns.com/object-pool.html) reuses them (see [UE performance considerations](https://dev.epicgames.com/documentation/en-us/unreal-engine/common-memory-and-cpu-performance-considerations-in-unreal-engine)). Consider caching the subsystem pointer instead of re-fetching it each hit.
 
 ---
 
@@ -334,7 +334,7 @@ UFUNCTION() void OnDamage(FVector Where, float Amount, bool bCrit); // spawn a U
 
 ### 🧩 C++ classes & methods
 **`URockData : UPrimaryDataAsset`** — `UPROPERTY(EditAnywhere) TObjectPtr<UStaticMesh> Mesh; float MaxHP=10; int32 CoinReward=10;` (`MaxHP` is `float` to match `AOreVein::HP` and fractional crit damage; `CoinReward` stays an integer count)
-**`UPickaxeData : UPrimaryDataAsset`** — `UPROPERTY(EditAnywhere) TObjectPtr<UStaticMesh> Mesh; float Damage=1; float Speed=1;`
+**`UPickaxeData : UPrimaryDataAsset`** — `UPROPERTY(EditAnywhere) TObjectPtr<UStaticMesh> Mesh; float Damage=1;` (no `Speed` field — swing cadence lives in `Econ->AutoSwingInterval`, Q12; don't add data nothing reads)
 **Update `AOreVein`** — data-driven, seeded through the subsystem:
 ```cpp
 UPROPERTY(EditAnywhere, Category="Rock") TObjectPtr<URockData> RockData; // starting tier (BP-assigned)
@@ -399,10 +399,20 @@ UPROPERTY(BlueprintReadOnly) TObjectPtr<UPickaxeData> EquippedPickaxe;
 ```cpp
 UCLASS(Abstract, EditInlineNew, DefaultToInstanced, BlueprintType)
 class DEEPDELVE_API UTechEffect : public UObject { GENERATED_BODY()
-public: UFUNCTION() virtual void Apply(class UMineEconomySubsystem* Econ, int32 NewLevel) {} };
+public:
+    UFUNCTION() virtual void Apply(class UMineEconomySubsystem* Econ, int32 NewLevel) {}
+    // Stat effects (bonuses/mults) leave this true — safe to replay on load. State / side-effecting
+    // effects (Descend, EquipPickaxe, HireCollector) override it to false; their result is restored
+    // from the save instead of replayed. See Q10.
+    virtual bool ReplayOnLoad() const { return true; }
+};
 ```
-**Subclasses** — each `Apply(Econ, NewLevel)` writes an **absolute** value from `NewLevel` (never `+=`), so it's correct on purchase *and* when replayed once on load (Q10): `UTechEffect_UpgradePickaxeDamage` (`float AmountPerLevel=1;` → `Econ->PickaxeDamageBonus = AmountPerLevel * NewLevel`); `UTechEffect_EquipPickaxe` (`UPROPERTY(EditAnywhere) TObjectPtr<UPickaxeData> Pickaxe;` → `Econ->EquippedPickaxe = Pickaxe`); `UTechEffect_Descend` (`UPROPERTY(EditAnywhere) TObjectPtr<URockData> NextRock;` → `Econ->SetCurrentRock(NextRock)`).
+**Subclasses:** `UTechEffect_UpgradePickaxeDamage` (`float AmountPerLevel=1;` → `Econ->PickaxeDamageBonus = AmountPerLevel * NewLevel`); `UTechEffect_EquipPickaxe` (`UPROPERTY(EditAnywhere) TObjectPtr<UPickaxeData> Pickaxe;` → `Econ->EquippedPickaxe = Pickaxe`); `UTechEffect_Descend` (`UPROPERTY(EditAnywhere) TObjectPtr<URockData> NextRock;` → `Econ->SetCurrentRock(NextRock)`).
+
+**Two kinds of effect:** *stat* effects (like `UpgradePickaxeDamage`) write an **absolute** value from `NewLevel` (never `+=`) so they're correct on purchase *and* when replayed on load — leave `ReplayOnLoad()` `true`. *State / side-effecting* effects — **`EquipPickaxe`** (sets the equipped pickaxe) and **`Descend`** (destroys/spawns the rock actor and moves the camera) — **override `ReplayOnLoad()` to return `false`**: replaying them on load would repeat the side effects and, because `NodeLevels` is an unordered `TMap`, could land you on the wrong tier. The save restores `CurrentRock`/`EquippedPickaxe` directly instead (Q10).
 **`UTechNode : UPrimaryDataAsset`** — `FName NodeId; FText DisplayName, Description; TObjectPtr<UTexture2D> Icon; int32 Cost=10; float CostGrowth=1.15f; bool bRepeatable=false; int32 MaxLevel=1; TArray<TObjectPtr<UTechNode>> Prerequisites; FVector2D GridPosition; UPROPERTY(Instanced) TObjectPtr<UTechEffect> Effect;` (all `UPROPERTY(EditAnywhere)`).
+- ⚠️ **`NodeId` must be unique per asset** — it's the key for `NodeLevels` (and the save, Q10). Leave it `None` and *every* node shares one counter, so buying one node marks the others owned and their prereqs pass spuriously. (Alternatively key `NodeLevels` by the node's `FPrimaryAssetId`/asset path instead of a hand-set `FName`.)
+- ⚠️ **`bRepeatable` nodes ignore `MaxLevel`** (buy indefinitely); only non-repeatable nodes are capped by `MaxLevel` (default `1`). Otherwise a repeatable upgrade maxes out after one purchase because `MaxLevel` defaults to `1`.
 **Update `UMineEconomySubsystem`** (`EquippedPickaxe`, `CurrentRock`, `CurrentRockActor`, `OreVeinClass`, `LastRockTransform` exist from Q5, all `UPROPERTY()`):
 ```cpp
 UPROPERTY() TMap<FName,int32> NodeLevels;
@@ -411,9 +421,9 @@ UPROPERTY(EditAnywhere) float DescendCameraStep = 150.f;       // tunable in the
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTechChanged);
 UPROPERTY(BlueprintAssignable) FOnTechChanged OnTechChanged;
 
-UFUNCTION(BlueprintCallable) int32 GetNodeLevel(UTechNode* Node) const;
+UFUNCTION(BlueprintCallable) int32 GetNodeLevel(UTechNode* Node) const; // NodeLevels.FindRef(Node->NodeId)
 UFUNCTION(BlueprintCallable) int32 GetCost(UTechNode* Node) const;   // Cost * CostGrowth^level
-UFUNCTION(BlueprintCallable) bool  CanBuy(UTechNode* Node) const;    // prereqs met, not maxed, Coins>=cost
+UFUNCTION(BlueprintCallable) bool  CanBuy(UTechNode* Node) const;    // prereqs met · (Node->bRepeatable || level < MaxLevel) · Coins >= GetCost(Node)
 UFUNCTION(BlueprintCallable) bool  TryBuy(UTechNode* Node);          // AddCoins(-cost) [broadcasts OnCoinsChanged→HUD], ++level, Effect->Apply(this, level), OnTechChanged.Broadcast()
 UFUNCTION() void SetCurrentRock(URockData* NewRock);                 // called by UTechEffect_Descend
 ```
@@ -438,23 +448,23 @@ void UMineEconomySubsystem::SetCurrentRock(URockData* NewRock)
 ### 🎛️ UPROPERTY → values
 | Data Asset | Field | Value |
 |---|---|---|
-| `DA_Node_Sharpen` | `bRepeatable`/`Cost`/`Effect` | `true`/`10`/`UpgradePickaxeDamage(AmountPerLevel 1)` |
-| `DA_Node_IronPick` | `Prerequisites`/`Cost`/`Effect` | `[Sharpen]`/`100`/`EquipPickaxe(DA_SturdyPick)` |
-| `DA_Node_Descend` | `Prerequisites`/`Cost`/`Effect` | `[IronPick]`/`250`/`Descend(DA_IronVein)` |
-| each node | `Icon` | a placeholder texture or mesh-captured thumbnail |
+| `DA_Node_Sharpen` | `NodeId`/`bRepeatable`/`Cost`/`Effect` | `Sharpen`/`true`/`10`/`UpgradePickaxeDamage(AmountPerLevel 1)` |
+| `DA_Node_IronPick` | `NodeId`/`Prerequisites`/`Cost`/`Effect` | `IronPick`/`[Sharpen]`/`100`/`EquipPickaxe(DA_SturdyPick)` |
+| `DA_Node_Descend` | `NodeId`/`Prerequisites`/`Cost`/`Effect` | `Descend`/`[IronPick]`/`250`/`Descend(DA_IronVein)` |
+| each node | `NodeId` / `Icon` | a **unique** name / placeholder texture |
 
 ### Steps
 1. New C++ class → Object → `TechEffect` (`Abstract, EditInlineNew, DefaultToInstanced`); add `virtual Apply`.
 2. Add the three effect subclasses with params + `Apply` overrides.
 3. New C++ class → PrimaryDataAsset → `TechNode`; mark `Effect` `Instanced`.
 4. Extend the subsystem (`NodeLevels`, `PickaxeDamageBonus`, `OnTechChanged`, `GetCost/CanBuy/TryBuy`, `SetCurrentRock`).
-5. Create the three `DA_Node_*`, set effects/prereqs/costs.
+5. Create the three `DA_Node_*`; set a **unique `NodeId`** on each, plus effects/prereqs/costs and `bRepeatable` (repeatable nodes ignore `MaxLevel`).
 6. **Wire a temporary trigger to `TryBuy`** — the quickest is a debug key: add an `IA_DebugBuy` action to `IMC_Mining`, bind it in the controller, and call `Econ->TryBuy(SomeNode)` (or use a console command). It's throwaway — Q7 replaces it with the real tech-tree UI, so remove it then. Confirm the three nodes work (descend swaps the rock); build.
 
 🏁 **Milestone:** buying the three nodes sharpens, equips, and descends to tougher/richer rock.
 🧪 **Boss check:** add a 4th node as a `DA_` + one new effect subclass — **with zero edits to any existing effect** (open/closed in action).
 🎁 **Reward:** Title **Pit Foreman** · +300 XP.
-💡 **Notes & gotchas:** mark `UTechEffect` `EditInlineNew`+`DefaultToInstanced` and the node's `Effect` `Instanced`, or you can't create effect objects inline on the Data Asset. `SetCurrentRock` needs `#include "Kismet/GameplayStatics.h"` and `#include "Camera/CameraActor.h"`, and assumes exactly one `ACameraActor` in the level (the Q1 one). ⚖️ `CostGrowth` (~1.10–1.15) sets pacing; decide a rounding rule for `Cost * CostGrowth^level` (e.g. `FMath::RoundToInt`) so costs are stable. Expose tuning values as `EditAnywhere` so you balance without recompiling; tune after the demo. **Effect contract:** write every `Apply` as an **absolute** function of `NewLevel` (e.g. `Bonus = PerLevel * NewLevel`), not `+=` — `TryBuy` calls it once with the new level and Q10's load replays it once per node, so an incrementing `Apply` would restore only one level after a reload. **Spend via `AddCoins(-cost)`** so `OnCoinsChanged` fires and the HUD coin counter updates on purchase (a bare `Coins -= cost` won't refresh it).
+💡 **Notes & gotchas:** mark `UTechEffect` `EditInlineNew`+`DefaultToInstanced` and the node's `Effect` `Instanced`, or you can't create effect objects inline on the Data Asset. `SetCurrentRock` needs `#include "Kismet/GameplayStatics.h"` and `#include "Camera/CameraActor.h"`, and assumes exactly one `ACameraActor` in the level (the Q1 one). ⚖️ `CostGrowth` (~1.10–1.15) sets pacing; decide a rounding rule for `Cost * CostGrowth^level` (e.g. `FMath::RoundToInt`) so costs are stable. Expose tuning values as `EditAnywhere` so you balance without recompiling; tune after the demo. **Effect contract:** write *stat* `Apply`s as an **absolute** function of `NewLevel` (e.g. `Bonus = PerLevel * NewLevel`), not `+=` — `TryBuy` calls it once with the new level and Q10's load replays stat effects once per node, so an incrementing `Apply` would restore only one level after a reload. *State* effects (`Descend`, `EquipPickaxe`) instead return `false` from `ReplayOnLoad()` and are restored from the save. **Spend via `AddCoins(-cost)`** so `OnCoinsChanged` fires and the HUD coin counter updates on purchase (a bare `Coins -= cost` won't refresh it).
 
 ---
 
@@ -518,19 +528,19 @@ void UMineEconomySubsystem::SetCurrentRock(URockData* NewRock)
 🔑 **Key nodes / functions:** `USkeletalMeshComponent · Anim asset / PlayAnimation · GetWorld()->GetTimerManager().SetTimer(handle, this, &..::Swing, Interval, true) · IsValid() · Execute_MineHit · Econ->ReportDamage · SpawnActor`
 
 ### 🧩 C++ classes & methods
-**`UMinerData : UPrimaryDataAsset`** — `UPROPERTY(EditAnywhere) TObjectPtr<USkeletalMesh> Mesh; TObjectPtr<UAnimationAsset> MineAnim; float Damage; float Speed;`
+**`UMinerData : UPrimaryDataAsset`** — `UPROPERTY(EditAnywhere) TObjectPtr<USkeletalMesh> Mesh; TObjectPtr<UAnimationAsset> MineAnim; float Damage; float SwingInterval;` (`SwingInterval` = **seconds per swing**, not a speed — higher = slower; used directly as the timer period)
 **`ADwarf : AActor`** — every reference is a `UPROPERTY`:
 ```cpp
 UPROPERTY(VisibleAnywhere) TObjectPtr<USkeletalMeshComponent> Mesh;
 UPROPERTY(EditAnywhere) TObjectPtr<UMinerData> MinerData;
 FTimerHandle SwingTimer;
-virtual void BeginPlay() override;  // set mesh + play MineAnim; GetTimerManager().SetTimer(SwingTimer, this, &ADwarf::Swing, MinerData->Speed, true)
+virtual void BeginPlay() override;  // set mesh + play MineAnim; GetTimerManager().SetTimer(SwingTimer, this, &ADwarf::Swing, MinerData->SwingInterval, true)
 void Swing();
 // Swing(): auto* R = Econ->CurrentRockActor; if (!IsValid(R)) return;      // guard the respawn gap
 //   const float Dmg = MinerData->Damage * Econ->CrewDamageMult;
 //   IMineable::Execute_MineHit(R, Dmg); Econ->ReportDamage(R->GetActorLocation(), Dmg, false);
 ```
-**`UTechEffect_HireMiner : UTechEffect`** — `UPROPERTY(EditAnywhere) TObjectPtr<UMinerData> Miner; TSubclassOf<ADwarf> DwarfClass;` → `Econ->SpawnDwarf(DwarfClass, Miner)`.
+**`UTechEffect_HireMiner : UTechEffect`** — `UPROPERTY(EditAnywhere) TObjectPtr<UMinerData> Miner; TSubclassOf<ADwarf> DwarfClass;` → `Econ->SpawnDwarf(DwarfClass, Miner)`. Like `HireCollector` (Q15), this **spawns an actor**, so **override `ReplayOnLoad()` to `false`** — Q10 rebuilds the crew from `HiredMiners`, and replaying the effect too would double-spawn dwarves on load.
 **Update `UMineEconomySubsystem`** — `UPROPERTY() float CrewDamageMult = 1.f; UPROPERTY() TArray<TObjectPtr<UMinerData>> HiredMiners; UPROPERTY() TSubclassOf<ADwarf> DwarfClass;` and `void SpawnDwarf(TSubclassOf<ADwarf> Class, UMinerData* Miner)` — spawn on a ring around the rock (e.g. `Angle = HiredMiners.Num() * 45°; Offset = FVector(cos,sin,0) * Radius(~200)` relative to `LastRockTransform`) so dwarves don't stack inside the rock, **and record** `DwarfClass = Class; HiredMiners.Add(Miner);` so Q10 can rebuild the exact crew.
 
 ### 🔵 Blueprints / Data
@@ -539,7 +549,7 @@ void Swing();
 ### 🎛️ UPROPERTY → values
 | Asset | Field | Value |
 |---|---|---|
-| `DA_Dwarf1` | `Mesh`/`MineAnim`/`Damage`/`Speed` | Synty dwarf mesh / mine anim / `1` / `1.0` |
+| `DA_Dwarf1` | `Mesh`/`MineAnim`/`Damage`/`SwingInterval` | Synty dwarf mesh / mine anim / `1` / `1.0` (1s per swing) |
 | `BP_Dwarf` | `MinerData` | `DA_Dwarf1` |
 | `DA_Node_HireDwarf` | `Effect` | `HireMiner(Miner=DA_Dwarf1, DwarfClass=BP_Dwarf)` |
 
@@ -582,7 +592,7 @@ UFUNCTION(BlueprintCallable) void QuitGame();    // UKismetSystemLibrary::QuitGa
 ```
 **Update `ADeepDelvePlayerController`** — **create the `IA_Pause` input action, map it (Esc) inside `IMC_Mining`, and `BindAction` it in `SetupInputComponent`** (all three, or pause never fires); on it create/remove a pause widget, `SetInputMode`, `Set Game Paused`; expose `UPROPERTY(EditDefaultsOnly) TSubclassOf<UMenuWidget> PauseMenuClass`.
 **Main menu display (concrete owner):** give the **MainMenu level a GameMode Override = `BP_MenuGameMode`** (parent `AGameModeBase`, stock PlayerController) so the mining controller/HUD never run there; the MainMenu **Level Blueprint** on BeginPlay creates `WBP_MainMenu` → Add to Viewport → Set Input Mode UI Only → Show Mouse Cursor.
-**Update `UMineEconomySubsystem`** — `void ResetToDefaults()` (clears Coins/Depth/NodeLevels, destroys dwarves, clears `HiredMiners`, resets multipliers and `CurrentRock`). ⚠️ **Extend this every time a later quest adds state** — crit fields (Q12), `CrewSpeedMult` (Q13), `CoinMult` (Q14), collectors/`CollectorSpeedMult` (Q15) — or New Game will carry stale values.
+**Update `UMineEconomySubsystem`** — `void ResetToDefaults()` (clears Coins/Depth/NodeLevels/`HiredMiners`, resets multipliers and `CurrentRock`). The dwarf/collector *actors* are freed by the `OpenLevel` that `NewGame` calls right after — the subsystem keeps no spawned-actor refs, so don't rely on it to destroy them mid-level. ⚠️ **Extend this every time a later quest adds state** — crit fields (Q12), `CrewSpeedMult` (Q13), `CoinMult` (Q14), collectors/`CollectorSpeedMult` (Q15) — or New Game will carry stale values.
 
 ### 🔵 Blueprints / Levels
 - **`WBP_MainMenu`**, **`WBP_PauseMenu`** (parent `UMenuWidget`), **`BP_MenuGameMode`** (parent `AGameModeBase`), a **MainMenu** level (World Settings → GameMode Override = `BP_MenuGameMode`). Set **Game Default Map = MainMenu**.
@@ -636,11 +646,12 @@ UPROPERTY() FDateTime LastSavedTime;
 UFUNCTION(BlueprintCallable) void SaveGame();  // CreateSaveGameObject -> copy state -> SaveGameToSlot("DeepDelve",0)
 UFUNCTION(BlueprintCallable) void LoadGame();  // DoesSaveGameExist -> LoadGameFromSlot -> Cast -> copy -> RebuildWorld()
 UFUNCTION(BlueprintCallable) bool HasSave() const;
-void RebuildWorld();  // for each HiredMiners: SpawnDwarf(DwarfClass, Miner.LoadSynchronous());
-                      // set CurrentRock/EquippedPickaxe via .LoadSynchronous();
-                      // RE-APPLY node effects (each is absolute in level, per Q6): for each NodeLevels entry call Effect->Apply(this, level) so derived
-                      //   values (PickaxeDamageBonus, crew/coin mults, crit, bAutoSwing) are rebuilt — loading NodeLevels alone won't;
-                      // Broadcast OnTechChanged/OnCoinsChanged/OnCrewStatsChanged
+void RebuildWorld();  // 1) restore STATE from the save: CurrentRock/EquippedPickaxe via .LoadSynchronous(), place the rock ONCE
+                      //    (do NOT replay Descend/EquipPickaxe — the save already holds the final tier/pickaxe);
+                      // 2) for each HiredMiners: SpawnDwarf(DwarfClass, Miner.LoadSynchronous());
+                      // 3) REPLAY only stat effects: for each NodeLevels entry, if (Effect->ReplayOnLoad()) Effect->Apply(this, level)
+                      //    so PickaxeDamageBonus/mults/crit/bAutoSwing rebuild (absolute in level, per Q6);
+                      // 4) Broadcast OnTechChanged/OnCoinsChanged/OnCrewStatsChanged
 ```
 Wire `UMenuWidget::Continue` (enabled only if `HasSave()`) → `LoadGame` then `OpenLevel("Mine")`; make `NewGame` also `DeleteGameInSlot`. Add a repeating autosave timer.
 
@@ -660,7 +671,7 @@ Wire `UMenuWidget::Continue` (enabled only if `HasSave()`) → `LoadGame` then `
 🏁 **Milestone:** relaunch → Continue → dwarves + depth restored.
 🧪 **Boss check:** delete the save; a clean first-run still works.
 🎁 **Reward:** Title stays **Master Smith** · +300 XP.
-💡 **Notes & gotchas:** bump `SaveVersion` and default missing fields on load — Q13–16 add fields and old saves must not crash. `LoadSynchronous()` is fine here; for larger projects prefer async streaming to avoid a hitch. **Load must re-derive stats:** `NodeLevels` is the only truth saved for upgrades, so on load replay each node's `Apply()` per level (above) — otherwise a loaded game has the right node counts but zero bonuses. **Autosave timer:** start it in the subsystem's `Initialize()`, but note `GetWorld()` can be null that early — set the timer from the first `BeginPlay` of the mine (or check `GetWorld()` first). The subsystem's hard `HiredMiners` (`TObjectPtr`, Q8) copies to the save's soft `TSoftObjectPtr` list on save and back via `LoadSynchronous` on load.
+💡 **Notes & gotchas:** bump `SaveVersion` and default missing fields on load — Q13–16 add fields and old saves must not crash. `LoadSynchronous()` is fine here; for larger projects prefer async streaming to avoid a hitch. **Load: restore state, replay only stats.** `CurrentRock`/`EquippedPickaxe` are saved directly — restore them from the soft refs and place the rock **once**; do **not** replay `Descend`/`EquipPickaxe` (they have world side effects and `NodeLevels` is an unordered `TMap`, so replaying `Descend` can land you on the wrong tier with a drifted camera and stray rocks). Replay only the **stat** effects (`ReplayOnLoad()==true`) to rebuild `PickaxeDamageBonus`/mults/crit/`bAutoSwing` — otherwise a loaded game has the right node counts but zero bonuses. **Autosave timer:** start it in the subsystem's `Initialize()`, but note `GetWorld()` can be null that early — set the timer from the first `BeginPlay` of the mine (or check `GetWorld()` first). The subsystem's hard `HiredMiners` (`TObjectPtr`, Q8) copies to the save's soft `TSoftObjectPtr` list on save and back via `LoadSynchronous` on load. **Load edges to handle:** (1) resolve saved `NodeId`s through a registry of all `UTechNode`s (e.g. an `EditDefaultsOnly TArray<TObjectPtr<UTechNode>> AllTechNodes` on the subsystem, or the Asset Manager) and **skip any id with no matching node** — renamed/deleted nodes must not crash the load; (2) **guard every `LoadSynchronous()` result for null** before using it (a moved/removed asset resolves to null); (3) on a `SaveVersion` bump, **default new fields explicitly** (an old save with no `HiredCollectors` → `0`) instead of reading uninitialised data.
 
 ---
 
@@ -728,7 +739,7 @@ void ADeepDelvePlayerController::PerformSwing(){
 ```
 Add `UPROPERTY(EditAnywhere) TObjectPtr<USoundBase> CritSound;` and a `FTimerHandle AutoSwingTimer;` on the controller. In `BeginPlay`, subscribe to `Econ->OnTechChanged` → a `ReconfigureAutoSwing()` that sets/clears the looping timer from `Econ->bAutoSwing` and `Econ->AutoSwingInterval`.
 **Update `UMineEconomySubsystem`:** `UPROPERTY() bool bAutoSwing=false; UPROPERTY(EditAnywhere) float AutoSwingInterval=1.f; UPROPERTY(EditAnywhere) float CritChance=0.f; UPROPERTY(EditAnywhere) float CritMultiplier=5.f;` (tunables are `EditAnywhere`).
-**New `UTechEffect` subclasses:** `UnlockAutoSwing`, `UpgradeSwingSpeed`, `UnlockCrit`, `UpgradeCritChance` — each writes the matching subsystem field (then `TryBuy` already broadcasts `OnTechChanged`, which retunes the controller's timer).
+**New `UTechEffect` subclasses:** `UnlockAutoSwing` (sets `bAutoSwing=true`), `UpgradeSwingSpeed`, `UnlockCrit`, `UpgradeCritChance`. Each writes the matching subsystem field (then `TryBuy` broadcasts `OnTechChanged`, which retunes the controller's timer). **`UnlockCrit` must seed a base chance** — `PerformSwing` gates crits purely on `CritChance`, so `UnlockCrit` does `Econ->CritChance = FMath::Max(Econ->CritChance, 0.05f)`; otherwise the unlock is a no-op until you also buy `UpgradeCritChance` (which adds `+5%`/level on top). **`UpgradeSwingSpeed` must clamp** — `AutoSwingInterval = FMath::Max(0.1f, BaseInterval - 0.1f * NewLevel)` — or enough levels drive the timer period to ≤0 (every-frame/undefined).
 
 ### 🔵 Blueprints / Data
 - `DA_Node_AutoSwing`, `DA_Node_SwingSpeed`, `DA_Node_CritStrike`, `DA_Node_CritChance`. `WBP_DamageNumber` shows crits in gold/bigger, driven by the `bCrit` passed to its `Setup(Amount,bCrit)` (the `UDamageNumberWidget` from Q4 — if you skipped that hook, add it now). `BP_MineController → CritSound = S_Crit`.
@@ -773,7 +784,7 @@ Add `UPROPERTY(EditAnywhere) TObjectPtr<USoundBase> CritSound;` and a `FTimerHan
 ### 🧩 C++ classes & methods
 **New effects:** `UpgradeCrewDamage`, `UpgradeCrewSpeed` → `Econ->CrewDamageMult` / `CrewSpeedMult`.
 **Update `UMineEconomySubsystem`:** `UPROPERTY() float CrewSpeedMult=1.f;` + `DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnCrewStatsChanged) OnCrewStatsChanged;` broadcast on change.
-**Update `ADwarf`:** in `BeginPlay` bind `Econ->OnCrewStatsChanged` → recompute damage and **reset `SwingTimer`** with the new interval (`MinerData->Speed / Econ->CrewSpeedMult`).
+**Update `ADwarf`:** in `BeginPlay` bind `Econ->OnCrewStatsChanged` → **reset `SwingTimer`** with the new interval (`MinerData->SwingInterval / Econ->CrewSpeedMult`). (Damage needs no caching — `Swing` already reads `Econ->CrewDamageMult` live each swing.)
 
 ### 🔵 Data
 - `DA_Node_CrewDamage`, `DA_Node_CrewSpeed`. Optional new `UMinerData` dwarf tiers + hire nodes.
@@ -836,7 +847,7 @@ Add `UPROPERTY(EditAnywhere) TObjectPtr<USoundBase> CritSound;` and a `FTimerHan
 🏁 **Milestone:** richer tiers + jackpot gems.
 🧪 **Boss check:** `MineralChance = 1.0`, descend a couple tiers, confirm deeper pays more.
 🎁 **Reward:** Title stays **Deeplord** · +350 XP.
-💡 **Notes & gotchas:** ⚖️ deeper tiers should raise `CoinReward` faster than `MaxHP`; keep `MineralChance` low (jackpot variance, not steady income). **Chain the new `DA_Node_Descend_*` via `Prerequisites`** (each descend requires the previous) so players can't skip tiers, and **add every new node to `WBP_TechTree.AllNodes`** with a `GridPosition`. Add `CoinMult` to `ResetToDefaults` (Q9).
+💡 **Notes & gotchas:** ⚖️ deeper tiers should raise `CoinReward` faster than `MaxHP`; keep `MineralChance` low (jackpot variance, not steady income). **Chain the new `DA_Node_Descend_*` via `Prerequisites`** (each descend requires the previous) so players can't skip tiers, and **add every new node to `WBP_TechTree.AllNodes`** with a `GridPosition`. Add `CoinMult` to `ResetToDefaults` (Q9). **Round the payout** — spawn `FMath::RoundToInt(CoinReward * Econ->CoinMult)` coins (pick round/floor once so payouts are stable). `UpgradeYield` is a stat effect (leave `ReplayOnLoad()` `true`); `AMineral` spawns are rare and stay outside the coin pool.
 
 ---
 
@@ -869,7 +880,7 @@ UPROPERTY(EditAnywhere) float LeftX, RightX;
 virtual void Tick(float Dt) override;   // move left by Speed*Dt*Econ->CollectorSpeedMult; wrap at LeftX
 UFUNCTION() void OnReachOverlap(...);   // if (ACoin* C = Cast<ACoin>(Other)) C->Collect();
 ```
-**New effects:** `UTechEffect_HireCollector`, `UTechEffect_UpgradeCollectorSpeed`. **Update subsystem:** `UPROPERTY() float CollectorSpeedMult=1.f;` plus a `SpawnCollector(TSubclassOf<ACollectorDwarf>)` that **records** `UPROPERTY() int32 HiredCollectors=0; UPROPERTY() TSubclassOf<ACollectorDwarf> CollectorClass;` (mirror of `SpawnDwarf`, Q8) so collectors can be rebuilt on load. `ACoin::Collect()` is already **public** (Q4).
+**New effects:** `UTechEffect_HireCollector`, `UTechEffect_UpgradeCollectorSpeed`. **Update subsystem:** `UPROPERTY() float CollectorSpeedMult=1.f;` plus a `SpawnCollector(TSubclassOf<ACollectorDwarf>)` that spawns the collector at `LeftX` (at the rock's Z) so it patrols across where coins land, and **records** `UPROPERTY() int32 HiredCollectors=0; UPROPERTY() TSubclassOf<ACollectorDwarf> CollectorClass;` (mirror of `SpawnDwarf`, Q8) so collectors can be rebuilt on load. `UTechEffect_HireCollector` spawns an actor, so it's a **state** effect — override `ReplayOnLoad()` to `false` (the Q10 rebuild loop respawns collectors from `HiredCollectors`; replaying the effect too would double them). `ACoin::Collect()` is already **public** (Q4).
 
 ### 🔵 Blueprints / Data
 - **`BP_Collector`** (parent `ACollectorDwarf`), `DA_Node_HireCollector`, `DA_Node_CollectorSpeed`.
@@ -912,7 +923,7 @@ UFUNCTION() void OnReachOverlap(...);   // if (ACoin* C = Cast<ACoin>(Other)) C-
 
 ### 🧩 C++ classes & methods
 - Add `UPROPERTY(EditAnywhere) TObjectPtr<class UNiagaraSystem> BreakVFX;` to `AOreVein` (plus crit sparks, mineral shimmer, coin poof); spawn via `UNiagaraFunctionLibrary::SpawnSystemAtLocation`. Add **`"Niagara"`** to `Build.cs`.
-- **Object Pool:** give the subsystem a `UPROPERTY() TArray<TObjectPtr<ACoin>> CoinPool;` — `AcquireCoin()` reuses an inactive coin (or spawns one if the pool is empty) and `Collect()` returns it to the pool (hide + disable) instead of `Destroy()`.
+- **Object Pool:** give the subsystem a `UPROPERTY() TArray<TObjectPtr<ACoin>> CoinPool;` — `AcquireCoin()` reuses an inactive coin (or spawns one if the pool is empty) and `Collect()` returns it to the pool (hide + disable) instead of `Destroy()`. Optionally pre-warm ~50 coins at startup so the first big burst doesn't spawn a batch mid-frame.
 - Optionally convert the raw `PlaySound2D` calls to **Sound Cues** (still `USoundBase` UPROPERTYs — assign a Sound Cue instead of a Sound Wave).
 
 ### 🔵 Blueprints
@@ -926,7 +937,7 @@ UFUNCTION() void OnReachOverlap(...);   // if (ACoin* C = Cast<ACoin>(Other)) C-
 
 ### Steps
 1. UMG animations; Niagara bursts; ambient/music.
-2. Add the coin **Object Pool** to the subsystem and route **all three** coin paths through it: (a) `AOreVein`/`AMineral` spawn → `AcquireCoin()` instead of `SpawnActor`; (b) `ACoin::Collect()` → return to the pool (hide, disable collision, stop physics) instead of `Destroy()`; (c) the Q15 collector still calls `Collect()`, which now recycles. On re-acquire, **reset** the coin (show, re-enable collision, clear velocity, re-apply launch impulse). **Drop the Q4 `SetLifeSpan` auto-destroy** — a pooled coin must never self-`Destroy` while parked, so replace lifespan with a timed *return-to-pool*; keep parked coins hidden + collision-off so the collector and cursor ignore them.
+2. Add the coin **Object Pool** to the subsystem and route **all three** coin paths through it: (a) `AOreVein`/`AMineral` spawn → `AcquireCoin()` instead of `SpawnActor`; (b) `ACoin::Collect()` → return to the pool (hide, disable collision, stop physics) instead of `Destroy()`; (c) the Q15 collector still calls `Collect()`, which now recycles. On re-acquire, **reset** the coin (show, re-enable collision, clear velocity, re-apply launch impulse, **re-init `Mesh` + `Value` from the class defaults** so a recycled coin never keeps a mineral's gem look/value). **Drop the Q4 `SetLifeSpan` auto-destroy** — a pooled coin must never self-`Destroy` while parked, so replace lifespan with a timed *return-to-pool*; keep parked coins hidden + collision-off so the collector and cursor ignore them. `AMineral`s spawn via `MineralClass` (outside the pool); if you'd rather pool them, give minerals their own pool.
 3. Set icon/splash/name; **Shipping** config; **Package**; test end-to-end; share.
 
 🏁 **Milestone:** a polished, playable v1.0 outside the editor, smooth even with heavy coin spawns.
