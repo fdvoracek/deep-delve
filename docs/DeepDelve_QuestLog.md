@@ -35,15 +35,15 @@ This chain teaches *how to structure a game* as much as it teaches Unreal. Every
 - **[Type Object](https://gameprogrammingpatterns.com/type-object.html) / data-driven** — Data Assets define content without new code *(Q5)*.
 - **Model–View separation** — C++ `UUserWidget` base + `WBP_` layout via `BindWidget` *(Q4/Q7)*.
 - **[Update Method](https://gameprogrammingpatterns.com/update-method.html) vs Timers** — per-frame `Tick` only when needed (the collector, Q15); scheduled **[Gameplay Timers](https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-timers-in-unreal-engine)** for cadenced work (dwarves Q8, auto-swing Q12).
-- **[Object Pool](https://gameprogrammingpatterns.com/object-pool.html)** — reuse spawned actors instead of constant spawn/destroy churn *(noted in Q4, applied as the Q16 optimization; see [UE performance considerations](https://dev.epicgames.com/documentation/en-us/unreal-engine/common-memory-and-cpu-performance-considerations-in-unreal-engine))*.
+- **[Object Pool](https://gameprogrammingpatterns.com/object-pool.html)** — reuse spawned actors instead of constant spawn/destroy churn *(noted in Q4, applied as the Q17 optimization; see [UE performance considerations](https://dev.epicgames.com/documentation/en-us/unreal-engine/common-memory-and-cpu-performance-considerations-in-unreal-engine))*.
 
 **Companion reading:** [Epic C++ Coding Standard](https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine) · [Game Programming Patterns (free book)](https://gameprogrammingpatterns.com/) · [Refactoring Guru — Design Patterns](https://refactoring.guru/design-patterns).
 
 ## The C++-first arc
 
-1. Foundations & First Class — 2. The Player & Enhanced Input — 3. The Rock & the Interface — 4. Coins & the Economy Subsystem — 5. Data-Driven Content — 6. Tech Tree: Model — 7. Tech Tree: UI — 8. Hire the Crew — 9. Menus & Level Flow — 10. Save & Load — 11. Ship a Demo — 12. Pickaxe Upgrades — 13. The Growing Crew — 14. Rich Veins — 15. The Coin Collector — 16. Strike It Rich.
+1. Foundations & First Class — 2. The Player & Enhanced Input — 3. The Rock & the Interface — 4. Coins & the Economy Subsystem — 5. Data-Driven Content — 6. Tech Tree: Model — 7. Tech Tree: UI — 8. Hire the Crew — 9. Menus & Level Flow — 10. Save & Load — 11. Ship a Demo — 12. Pickaxe Upgrades — 13. The Growing Crew — 14. Rich Veins — 15. The Coin Collector — 16. Deep Economy: New Upgrades & Balance — 17. Strike It Rich.
 
-> **Status:** all 16 quests fully specified, dependency-audited, and annotated with the architecture patterns they teach.
+> **Status:** all 17 quests fully specified, dependency-audited, and annotated with the architecture patterns they teach.
 
 ---
 
@@ -313,7 +313,7 @@ UFUNCTION() void OnDamage(FVector Where, float Amount, bool bCrit); // spawn a U
 🏁 **Milestone:** break → coins burst → hover to collect → HUD climbs, Depth ticks, damage numbers float.
 🧪 **Boss check:** a coin credits exactly once and the HUD total matches.
 🎁 **Reward:** Title **Miner** · +200 XP.
-💡 **Notes & gotchas:** `BindWidget` requires the `WBP_HUD` widget names to **exactly match** the C++ members. Coins auto-clean via `SetLifeSpan`. **Create `ACoin`'s `Mesh` in the constructor (root)**, and **cache the subsystem once** (see the rule above; actors and widgets both use `GetGameInstance()`). Cursor-over on coins needs `bEnableMouseOverEvents` (set here) **and** coin collision that the cursor trace can hit. **Optimization to remember (Q16):** spawning/destroying many coins churns memory — an [Object Pool](https://gameprogrammingpatterns.com/object-pool.html) reuses them (see [UE performance considerations](https://dev.epicgames.com/documentation/en-us/unreal-engine/common-memory-and-cpu-performance-considerations-in-unreal-engine)). Consider caching the subsystem pointer instead of re-fetching it each hit.
+💡 **Notes & gotchas:** `BindWidget` requires the `WBP_HUD` widget names to **exactly match** the C++ members. Coins auto-clean via `SetLifeSpan`. **Create `ACoin`'s `Mesh` in the constructor (root)**, and **cache the subsystem once** (see the rule above; actors and widgets both use `GetGameInstance()`). Cursor-over on coins needs `bEnableMouseOverEvents` (set here) **and** coin collision that the cursor trace can hit. **Optimization to remember (Q17):** spawning/destroying many coins churns memory — an [Object Pool](https://gameprogrammingpatterns.com/object-pool.html) reuses them (see [UE performance considerations](https://dev.epicgames.com/documentation/en-us/unreal-engine/common-memory-and-cpu-performance-considerations-in-unreal-engine)). Consider caching the subsystem pointer instead of re-fetching it each hit.
 
 ---
 
@@ -904,7 +904,74 @@ UFUNCTION() void OnReachOverlap(...);   // if (ACoin* C = Cast<ACoin>(Other)) C-
 
 ---
 
-# QUEST 16 — Strike It Rich · ~60 min · *finale*
+# QUEST 16 — Deep Economy: New Upgrades & Balance · ~60 min
+
+**Goal.** Round out the tech tree with a wave of new upgrades across every system — pickaxe, crew, economy/QoL, progression — then **tune the whole loop** so the curve feels good. The designer's pass.
+
+📚 **Teaches:** the payoff of the data-driven effect system (add content as tiny classes + Data Assets, *zero* new systems) and **game-balance methodology** — reading and shaping an incremental's cost-vs-income curves.
+**Resources:** [Incremental-game design](https://en.wikipedia.org/wiki/Incremental_game) · [Open/Closed principle](https://en.wikipedia.org/wiki/Open%E2%80%93closed_principle) · [Data Assets](https://dev.epicgames.com/documentation/en-us/unreal-engine/data-assets-in-unreal-engine) · *Further:* [Game balance](https://en.wikipedia.org/wiki/Game_balance)
+
+🎮 **After this quest:** a fuller upgrade screen and a loop that ramps smoothly — no dead ends, no runaway spikes, a satisfying "just one more" cadence.
+
+💡 **Why:** every system now exists, so the fastest way to make Deep Delve *feel* like a real incremental is **breadth of choices + a tuned curve**. Because Q6's effects obey Open/Closed, each new upgrade is a small `UTechEffect` subclass + a `DA_Node_*` — no engine changes. And balancing is where an incremental is won or lost: the exponential of costs against the exponential of income sets the entire pacing.
+
+🏛️ **Patterns & principles:** **Open/Closed at scale** — a whole content wave with no edits to existing effects (the Q6 boss check, cashed in). **Single source of truth** — every new modifier lives on the subsystem, read live by gameplay. **Data-driven balancing** — costs/growth/amounts are `EditAnywhere`, so you tune in the editor (or a spreadsheet), no recompile.
+
+🔑 **Key nodes / functions:** `new UTechEffect subclasses · bRepeatable/MaxLevel/CostGrowth tuning · FMath::RoundToInt · TryBuyMax · a cadence timer for auto-actions · AllNodes layout`
+
+### 🧩 C++ classes & methods — new effects
+All are **stat/flag writers** (absolute in `NewLevel`, `ReplayOnLoad()==true`), so save/load "just works". Add the matching field to `UMineEconomySubsystem` for each.
+
+**Pickaxe depth**
+- `UTechEffect_UpgradeCritDamage` → `Econ->CritMultiplier` (crit *damage*, complementing Q12's crit *chance*).
+- `UTechEffect_UnlockCombo` + `UpgradeCombo` → a click **combo/heat** meter: consecutive manual swings ramp a temporary damage multiplier that decays when you stop (read in `PerformSwing`).
+
+**Crew depth**
+- `UTechEffect_UpgradeCrewCap` → `Econ->MaxCrew` (hire node checks it before `SpawnDwarf`).
+- `UTechEffect_UnlockAutoHire` → `Econ->bAutoHireCrew` (a subsystem timer auto-buys the hire node when affordable).
+
+**Economy & QoL**
+- `UTechEffect_UnlockBuyMax` → `Econ->bBuyMax` (+ a `TryBuyMax(Node)` that buys every affordable level at once; the node widget uses it).
+- `UTechEffect_UpgradeRefinery` → `Econ->MineralChanceBonus` / `MineralValueMult` (boosts the Q14 mineral drop).
+
+**Progression**
+- `UTechEffect_UnlockAutoDescend` → `Econ->bAutoDescend` (once a tier's depth threshold is met, auto-trigger the next `Descend` — reuses `SetCurrentRock`).
+- `UTechEffect_UpgradeDepthBonus` → `Econ->DepthBonusPerLevel` (a global coin multiplier that scales with Depth reached).
+
+`PerformSwing` reads the combo + crit-damage; `SpawnDwarf` respects `MaxCrew`; auto-hire/auto-descend run off a **cadence timer** (not per-frame). Guard the new `bUnlock…` flags on the crash path (ground-rule 5, Q3).
+
+### 🔵 Data — new `DA_Node_*`
+`DA_Node_CritDamage`, `DA_Node_Combo` · `DA_Node_CrewCap`, `DA_Node_AutoHire` · `DA_Node_BuyMax`, `DA_Node_Refinery` · `DA_Node_AutoDescend`, `DA_Node_DepthBonus`. Each needs a **unique `NodeId`**, prereqs wired into the existing tree, and a slot in `WBP_TechTree.AllNodes` with a `GridPosition` (Q6/Q7).
+
+### 🎛️ UPROPERTY → values (a starting point — you'll tune these)
+| Data Asset | `Cost` / `CostGrowth` / `bRepeatable` | Effect |
+|---|---|---|
+| `DA_Node_CritDamage` | `500` / `1.18` / `true` | `UpgradeCritDamage` (+0.5× per level) |
+| `DA_Node_Combo` | `750` / `—` / `false` | `UnlockCombo` (then `UpgradeCombo` repeatable) |
+| `DA_Node_CrewCap` | `1000` / `1.5` / `true` | `UpgradeCrewCap` (+1 dwarf/level) |
+| `DA_Node_AutoDescend` | `5000` / `—` / `false` | `UnlockAutoDescend` |
+| `DA_Node_BuyMax` | `2500` / `—` / `false` | `UnlockBuyMax` (QoL) |
+
+### ⚖️ The balancing pass (the real lesson)
+- **Map the two curves.** Cost = `Cost * CostGrowth^level`; income = coins/sec from clicks + crew + collector × all mults. A healthy incremental keeps **time-to-next-upgrade roughly constant** (or gently rising). Pull a few values into a spreadsheet and watch that ratio.
+- **Levers, by impact:** `CostGrowth` (pacing — keep ~1.10–1.15), base `Cost`, effect amount-per-level, each tier's `CoinReward` vs `MaxHP`, then `MineralChance`.
+- **Symptoms → fix:** *walls* (progress stalls) → lower `CostGrowth` or raise income; *trivial/runaway* (buy everything at once) → raise `CostGrowth`/costs; *dead upgrades* (never worth it) → re-cost or buff the effect.
+- **Method:** play to your deepest tier, note minutes-per-tier, change **one** lever, replay. Everything's `EditAnywhere`, so it's editor-only — no recompile (the reason Q5/Q6 made these data).
+
+### Steps
+1. Add the new effect subclasses (absolute in level, `ReplayOnLoad()==true`; the "Unlock…" ones set a bool) and their subsystem fields.
+2. Read combo + crit-damage in `PerformSwing`; enforce `MaxCrew` in `SpawnDwarf`; add the auto-hire / auto-descend cadence timer and `TryBuyMax`.
+3. Create the `DA_Node_*` (unique `NodeId`, prereqs, costs); add each to `AllNodes` with a grid position.
+4. **Balance:** build a quick cost-vs-income table, tune `CostGrowth`/costs/amounts until minutes-per-tier is steady, then playtest to your deepest tier.
+
+🏁 **Milestone:** a broad upgrade screen and a loop with no walls or runaway spikes — a steady "just one more".
+🧪 **Boss check:** bump one node's `CostGrowth` from `1.15` to `1.30`, feel the loop stall, then put it back — proof you can read the curve.
+🎁 **Reward:** Title stays **Deeplord** · +350 XP.
+💡 **Notes & gotchas:** every new node still needs a unique `NodeId` + an `AllNodes` slot (Q6/Q7); auto-hire/auto-descend need a sane cadence (a timer, not per-frame); guard the new `bUnlock…` flags. All these effects are stat/flag writers → `ReplayOnLoad()==true`, so they restore correctly on load with no extra work.
+
+---
+
+# QUEST 17 — Strike It Rich · ~60 min · *finale*
 
 **Goal.** Juice (animation, Niagara, Sound Cues), an **Object Pool** for coins, and a polished **Shipping** v1.0.
 
