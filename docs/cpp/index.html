@@ -49,6 +49,20 @@ ol.arc .soon{color:var(--muted)}
   </div>
 
   <div class="panel">
+    <h2>🧱 Architecture at a glance <span class="tag">self-contained</span></h2>
+    <p>The chain is dependency-audited — every class, method, asset and <code>UPROPERTY</code> is introduced before it's used, so you never need to build anything outside the quests. Key decisions:</p>
+    <ul style="margin:6px 0;padding-left:20px;font-size:13.5px;line-height:1.6">
+      <li><b>The economy subsystem owns the state</b> — <code>UMineEconomySubsystem</code> holds Coins, Depth, tech <code>NodeLevels</code>, <code>EquippedPickaxe</code>, <code>PickaxeDamageBonus</code>, <code>CurrentRock</code>/<code>CurrentRockActor</code>, and the crew/collector multipliers. No Blueprint needed.</li>
+      <li><b>Player power</b> = <code>EquippedPickaxe->Damage + PickaxeDamageBonus</code>, read via the controller's <code>GetDamage()</code>.</li>
+      <li><b>One swing path</b> — <code>PerformSwing()</code> (manual + auto-swing) rolls crits and calls the shared <code>ShowDamageNumber()</code> helper; dwarves call the same door. No UI code lives in the subsystem.</li>
+      <li><b>Everything mineable</b> goes through the <code>IMineable</code> interface — clicks, dwarves, and auto-swing all call <code>TakeDamage</code>.</li>
+      <li><b>Descend actually works</b> — <code>SetCurrentRock()</code> swaps the live rock actor and nudges the camera; <code>AOreVein</code> always reads the subsystem's <code>CurrentRock</code>.</li>
+      <li><b>Data-driven</b> — rocks, pickaxes, miners and tech nodes are <code>UPrimaryDataAsset</code>s; effects are instanced <code>UTechEffect</code>s. The SaveGame uses <code>TSoftObjectPtr</code> and records the hired crew so it rebuilds the world exactly.</li>
+      <li><b>Build.cs modules:</b> <code>EnhancedInput</code> (Q2), <code>UMG</code>/<code>Slate</code>/<code>SlateCore</code> (Q4), <code>Niagara</code> (Q16).</li>
+    </ul>
+  </div>
+
+  <div class="panel">
     <h2>The arc</h2>
     <ol class="arc">
       <li>Foundations &amp; First Class — C++ project, Rider, migrate Synty, <code>ADeepDelveGameMode</code> <span class="tag">detailed</span></li>
@@ -68,7 +82,7 @@ ol.arc .soon{color:var(--muted)}
       <li>The Coin Collector (<code>ACollectorDwarf</code>) <span class="tag">detailed</span></li>
       <li>Strike It Rich — juice, Niagara, Shipping v1.0 <span class="tag">detailed</span></li>
     </ol>
-    <p style="font-size:12.5px;color:var(--muted)">All 16 quests are specified in the quest log (first migration pass — to be refined next). An interactive checklist tracker (like the Blueprints path) will be generated once the C++ chain is refined.</p>
+    <p style="font-size:12.5px;color:var(--muted)">All 16 quests are specified and <b>dependency-audited</b> (self-contained — nothing is used before it's built). Still a first pass to be deepened; an interactive checklist tracker (like the Blueprints path) will be generated once the C++ chain is refined.</p>
   </div>
 
   <div class="footer">Prefer a gentler start? Try the <a href="../blueprints/">Blueprints-first path</a>.</div>

@@ -355,7 +355,16 @@ UPROPERTY(EditAnywhere, Category="Rock") int32 CoinReward = 10;
 UPROPERTY(EditAnywhere, Category="Rock") TSubclassOf<ACoin> CoinClass;
 // in TakeDamage_Implementation break branch: loop CoinReward -> SpawnActor<ACoin>(CoinClass, ...); Economy->AddDepth(1);
 ```
-**Update `ADeepDelvePlayerController::BeginPlay`** — `bEnableMouseOverEvents = true;` and create + add `UHUDWidget` to the viewport (`CreateWidget`, expose the widget class as a `UPROPERTY(EditDefaultsOnly) TSubclassOf<UHUDWidget> HUDClass;`).
+**Update `ADeepDelvePlayerController`** — in `BeginPlay` set `bEnableMouseOverEvents = true` and create + add a `UHUDWidget` (`UPROPERTY(EditDefaultsOnly) TSubclassOf<UHUDWidget> HUDClass;`). Add the **shared floating-number helper** (used by clicks now, dwarves in Q8, crits in Q12 — one place):
+```cpp
+UPROPERTY(EditDefaultsOnly) TSubclassOf<UUserWidget> DamageNumberClass;
+UFUNCTION(BlueprintCallable) void ShowDamageNumber(FVector WorldLocation, float Amount, bool bCrit=false);
+// impl: ProjectWorldLocationToScreen(WorldLocation, Screen); CreateWidget(DamageNumberClass);
+//       set text/colour; add to viewport at Screen; its UMG anim floats+fades then RemoveFromParent.
+```
+`OnDig` calls `ShowDamageNumber(Hit.ImpactPoint, Amount)` **after** dealing damage — the rock never spawns numbers itself, so crits (Q12) and dwarves (Q8) style/position their own.
+
+> **Build.cs:** the first `UUserWidget` (`UHUDWidget`) means adding **`"UMG"`, `"Slate"`, `"SlateCore"`** to `PublicDependencyModuleNames` (next to `EnhancedInput`) — or nothing UMG-related compiles.
 
 ### 🔵 Blueprints to create
 - **`BP_Coin`** (parent `ACoin`), **`WBP_HUD`** (parent `UHUDWidget`), **`WBP_DamageNumber`** (a small `UUserWidget` with a float-up+fade animation).
@@ -369,6 +378,7 @@ UPROPERTY(EditAnywhere, Category="Rock") TSubclassOf<ACoin> CoinClass;
 | `BP_Coin` | `LaunchImpulse` / `Lifespan` | `300` / `30` |
 | `WBP_HUD` | `CoinsText`, `DepthText` | name two Text Blocks exactly `CoinsText` / `DepthText` (satisfies `BindWidget`) |
 | `BP_MineController` | `HUDClass` | `WBP_HUD` |
+| `BP_MineController` | `DamageNumberClass` | `WBP_DamageNumber` |
 | `BP_OreVein` | `CoinReward` | `10` |
 | `BP_OreVein` | `CoinClass` | `BP_Coin` |
 
@@ -409,16 +419,27 @@ public:
     UPROPERTY(EditAnywhere, Category="Pickaxe") float Speed = 1.f;
 };
 ```
-**Update `AOreVein`** — drive from data:
+**Update `AOreVein`** — drive from data, seeded through the subsystem so Descend (Q6) can swap tiers:
 ```cpp
-UPROPERTY(EditAnywhere, Category="Rock") TObjectPtr<URockData> RockData;
-// BeginPlay: if (RockData){ Mesh->SetStaticMesh(RockData->Mesh); MaxHP = RockData->MaxHP; CoinReward = RockData->CoinReward; } HP = MaxHP;
+UPROPERTY(EditAnywhere, Category="Rock") TObjectPtr<URockData> RockData; // starting tier (BP-assigned)
+// BeginPlay:
+//   auto* Econ = GetGameInstance()->GetSubsystem<UMineEconomySubsystem>();
+//   if (!Econ->CurrentRock) Econ->CurrentRock = RockData;          // seed the active tier once
+//   const URockData* Active = Econ->CurrentRock;                   // always use the subsystem's current tier
+//   Mesh->SetStaticMesh(Active->Mesh); MaxHP = Active->MaxHP; CoinReward = Active->CoinReward; HP = MaxHP;
+//   Econ->CurrentRockActor = this; Econ->OreVeinClass = GetClass(); Econ->LastRockTransform = GetActorTransform();
 ```
-**Update `ADeepDelvePlayerController`** — equip pickaxe data:
+**Also add to `UMineEconomySubsystem`:** `TObjectPtr<URockData> CurrentRock; TObjectPtr<AActor> CurrentRockActor; TSubclassOf<AOreVein> OreVeinClass; FTransform LastRockTransform;` (used by dwarves in Q8 and Descend in Q6).
+
+**Equip the pickaxe on the subsystem** (all economy/upgrade state lives there, so Q6's tech tree can swap it):
 ```cpp
-UPROPERTY(EditAnywhere, Category="Stats") TObjectPtr<UPickaxeData> EquippedPickaxe;
-// effective damage: float GetDamage() const { return EquippedPickaxe ? EquippedPickaxe->Damage : Damage; }
-// OnDig now sends GetDamage()
+// UMineEconomySubsystem:
+UPROPERTY(BlueprintReadOnly) TObjectPtr<UPickaxeData> EquippedPickaxe;
+// ADeepDelvePlayerController:
+UPROPERTY(EditDefaultsOnly, Category="Stats") TObjectPtr<UPickaxeData> DefaultPickaxe; // BP-assigned seed
+float GetDamage() const;   // = Econ->EquippedPickaxe->Damage   (Q6 adds + Econ->PickaxeDamageBonus)
+// BeginPlay: if (!Econ->EquippedPickaxe) Econ->EquippedPickaxe = DefaultPickaxe;
+// OnDig sends GetDamage()
 ```
 
 ### 🔵 Data Assets & Blueprint values
@@ -428,7 +449,7 @@ UPROPERTY(EditAnywhere, Category="Stats") TObjectPtr<UPickaxeData> EquippedPicka
 | Class | UPROPERTY | Assign in Blueprint |
 |---|---|---|
 | `BP_OreVein` | `RockData` | `DA_CopperVein` (replaces the per-value mesh/HP you set in Q3) |
-| `BP_MineController` | `EquippedPickaxe` | `DA_StonePick` |
+| `BP_MineController` | `DefaultPickaxe` | `DA_StonePick` (pushed into the subsystem on BeginPlay) |
 
 ### Steps
 1. Create `URockData`, `UPickaxeData`; build. Create the `DA_` instances (right-click → Miscellaneous → Data Asset → pick the class).
@@ -485,12 +506,11 @@ UPROPERTY(EditAnywhere) TArray<TObjectPtr<UTechNode>> Prerequisites;
 UPROPERTY(EditAnywhere) FVector2D GridPosition;
 UPROPERTY(EditAnywhere, Instanced) TObjectPtr<UTechEffect> Effect;   // inline effect object
 ```
-**Update `UMineEconomySubsystem`** — tech state + gameplay fields effects write to:
+**Update `UMineEconomySubsystem`** — tech state + the field effects write to (`EquippedPickaxe`, `CurrentRock`, `CurrentRockActor`, `OreVeinClass`, `LastRockTransform` already exist from Q5):
 ```cpp
 UPROPERTY() TMap<FName,int32> NodeLevels;
-UPROPERTY(BlueprintReadOnly) float PickaxeDamageBonus = 0.f;
-UPROPERTY(BlueprintReadOnly) TObjectPtr<UPickaxeData> EquippedPickaxe;
-UPROPERTY(BlueprintReadOnly) TObjectPtr<URockData> CurrentRock;
+UPROPERTY(BlueprintReadOnly) float PickaxeDamageBonus = 0.f;   // UpgradePickaxeDamage adds here
+UPROPERTY(EditAnywhere) float DescendCameraStep = 150.f;
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTechChanged);
 UPROPERTY(BlueprintAssignable) FOnTechChanged OnTechChanged;
 
@@ -498,8 +518,22 @@ UFUNCTION(BlueprintCallable) int32 GetNodeLevel(UTechNode* Node) const;
 UFUNCTION(BlueprintCallable) int32 GetCost(UTechNode* Node) const;      // Cost * CostGrowth^level
 UFUNCTION(BlueprintCallable) bool  CanBuy(UTechNode* Node) const;       // prereqs met, not maxed, Coins>=cost
 UFUNCTION(BlueprintCallable) bool  TryBuy(UTechNode* Node);             // spend, level++, Effect->Apply, broadcast
+UFUNCTION() void SetCurrentRock(URockData* NewRock);                    // called by UTechEffect_Descend
 ```
-The player's effective damage becomes `EquippedPickaxe->Damage + Econ->PickaxeDamageBonus`.
+`GetDamage()` (on the controller) now returns `EquippedPickaxe->Damage + PickaxeDamageBonus`.
+
+**`SetCurrentRock` is what makes descending actually change the rock** — this closes the loop so Q14's extra tiers work too:
+```cpp
+void UMineEconomySubsystem::SetCurrentRock(URockData* NewRock)
+{
+    CurrentRock = NewRock;
+    const FTransform Where = LastRockTransform;
+    if (CurrentRockActor) CurrentRockActor->Destroy();              // remove old tier
+    GetWorld()->SpawnActor<AOreVein>(OreVeinClass, Where);          // new rock reads CurrentRock in BeginPlay
+    if (AActor* Cam = UGameplayStatics::GetActorOfClass(this, ACameraActor::StaticClass()))
+        Cam->AddActorWorldOffset(FVector(0, 0, -DescendCameraStep));// small downward camera move
+}
+```
 
 ### 🔵 Data Assets to create (no BP subclasses — effects are inline on the node)
 - `DA_Node_Sharpen` (`UTechNode`), `DA_Node_IronPick`, `DA_Node_Descend`.
@@ -556,6 +590,7 @@ virtual int32 NativePaint(...) const override; // draw connector lines from each
 | `WBP_TechTree` | `AllNodes` | `[DA_Node_Sharpen, DA_Node_IronPick, DA_Node_Descend]` |
 
 🏁 **Milestone:** the visual tree; click affordable nodes to buy. 🧪 **Boss:** add the 4th node's `GridPosition`+prereq and see it wired with no layout code. 🎁 **Reward:** Pit Foreman · +300 XP.
+💡 *Icons:* the node `Icon` (`UTexture2D`) can be a placeholder or a thumbnail captured from the mesh — assign it on each `DA_Node_*` (add an `Icon` row to their values).
 
 ---
 
@@ -577,7 +612,7 @@ virtual void BeginPlay() override;  // set skeletal mesh + play MineAnim; start 
 void Swing();                       // Econ->CurrentRockActor -> IMineable::Execute_TakeDamage(rock, MinerData->Damage * Econ->CrewDamageMult); PlaySound2D; spawn damage number
 ```
 **`UTechEffect_HireMiner : UTechEffect`** — `TObjectPtr<UMinerData> Miner; TSubclassOf<ADwarf> DwarfClass;` → `Apply` calls `Econ->SpawnDwarf(DwarfClass, Miner)`.
-**Update `UMineEconomySubsystem`** — `TObjectPtr<AActor> CurrentRockActor; float CrewDamageMult = 1.f;` + `void SpawnDwarf(TSubclassOf<ADwarf>, UMinerData*)` (spawns at a ring slot). `AOreVein::BeginPlay` registers itself as `CurrentRockActor`.
+**Update `UMineEconomySubsystem`** — `float CrewDamageMult = 1.f;`, plus a record of the crew for save/rebuild: `UPROPERTY() TArray<TObjectPtr<UMinerData>> HiredMiners; UPROPERTY() TSubclassOf<ADwarf> DwarfClass;`, and `void SpawnDwarf(TSubclassOf<ADwarf> Class, UMinerData* Miner)` — spawns at a ring slot **and records** `DwarfClass = Class; HiredMiners.Add(Miner);` so Q10 can rebuild the exact crew. (`CurrentRockActor` already exists from Q5.)
 
 ### 🔵 Blueprints / Data
 - **`BP_Dwarf`** (parent `ADwarf`), **`DA_Dwarf1`** (`UMinerData`), **`DA_Node_HireDwarf`** (`UTechNode`, repeatable).
@@ -603,15 +638,16 @@ void Swing();                       // Econ->CurrentRockActor -> IMineable::Exec
 **`UMenuWidget : UUserWidget`**
 ```cpp
 UFUNCTION(BlueprintCallable) void NewGame();       // Econ->ResetToDefaults(); UGameplayStatics::OpenLevel("Mine")
-UFUNCTION(BlueprintCallable) void Continue();      // (Q10) Econ->LoadGame(); OpenLevel("Mine")
+UFUNCTION(BlueprintCallable) void Continue();      // Q9: hidden/disabled (no save yet) — implemented in Q10
 UFUNCTION(BlueprintCallable) void QuitToMenu();    // OpenLevel("MainMenu")
 UFUNCTION(BlueprintCallable) void QuitGame();      // UKismetSystemLibrary::QuitGame
 ```
-**Update `ADeepDelvePlayerController`** — add `IA_Pause`; on it, create/remove a pause widget, `SetInputMode`, `SetPause(true/false)`; expose `TSubclassOf<UMenuWidget> PauseMenuClass` (`EditDefaultsOnly`). A tiny `AMainMenuController`/level-BP creates `WBP_MainMenu` in the MainMenu map.
-**Update `UMineEconomySubsystem`** — `void ResetToDefaults()` (clears Coins/Depth/NodeLevels/dwarves).
+**Update `ADeepDelvePlayerController`** — add `IA_Pause`; on it create/remove a pause widget, `SetInputMode`, `Set Game Paused`; expose `UPROPERTY(EditDefaultsOnly) TSubclassOf<UMenuWidget> PauseMenuClass`.
+**Main menu display (concrete owner).** Give the **MainMenu level a GameMode Override = `BP_MenuGameMode`** (parent `AGameModeBase`, stock PlayerController) so the mining controller/HUD never run on the menu. The MainMenu **Level Blueprint** on BeginPlay: Create Widget `WBP_MainMenu` → Add to Viewport → Set Input Mode UI Only → Show Mouse Cursor.
+**Update `UMineEconomySubsystem`** — `void ResetToDefaults()` (clears Coins/Depth/NodeLevels, destroys dwarves, clears `HiredMiners`, resets multipliers and `CurrentRock`).
 
 ### 🔵 Blueprints / Levels
-- **`WBP_MainMenu`**, **`WBP_PauseMenu`** (parent `UMenuWidget`), a **MainMenu** level. Set **Game Default Map = MainMenu**.
+- **`WBP_MainMenu`**, **`WBP_PauseMenu`** (parent `UMenuWidget`), **`BP_MenuGameMode`** (parent `AGameModeBase`), and a **MainMenu** level (World Settings → GameMode Override = `BP_MenuGameMode`). Set **Game Default Map = MainMenu**.
 
 ### 🎛️ UPROPERTY → values
 | Asset | Field | Value |
@@ -635,8 +671,9 @@ UFUNCTION(BlueprintCallable) void QuitGame();      // UKismetSystemLibrary::Quit
 UPROPERTY() int32 SaveVersion = 1;
 UPROPERTY() double Coins = 0, Depth = 0;
 UPROPERTY() TMap<FName,int32> NodeLevels;
-UPROPERTY() int32 DwarfCount = 0;
-UPROPERTY() FString CurrentRockId, EquippedPickaxeId; // primary-asset ids
+UPROPERTY() TArray<TSoftObjectPtr<UMinerData>> HiredMiners;   // enough to respawn the exact crew
+UPROPERTY() TSoftObjectPtr<URockData> CurrentRock;
+UPROPERTY() TSoftObjectPtr<UPickaxeData> EquippedPickaxe;
 UPROPERTY() FDateTime LastSavedTime;
 ```
 **Update `UMineEconomySubsystem`**
@@ -644,7 +681,8 @@ UPROPERTY() FDateTime LastSavedTime;
 UFUNCTION(BlueprintCallable) void SaveGame();   // CreateSaveGameObject -> copy state -> SaveGameToSlot("DeepDelve",0)
 UFUNCTION(BlueprintCallable) void LoadGame();   // DoesSaveGameExist -> LoadGameFromSlot -> Cast -> copy -> RebuildWorld()
 UFUNCTION(BlueprintCallable) bool HasSave() const;
-void RebuildWorld();                            // re-spawn DwarfCount dwarves, set CurrentRock/EquippedPickaxe, broadcast OnTechChanged/OnCoinsChanged
+void RebuildWorld();  // for each HiredMiners entry: SpawnDwarf(DwarfClass, Miner.LoadSynchronous());
+                      // set Econ->CurrentRock / EquippedPickaxe via .LoadSynchronous(); broadcast OnTechChanged/OnCoinsChanged
 ```
 Wire `UMenuWidget::Continue` (enabled only if `HasSave()`); `NewGame` calls `ResetToDefaults` **and** `UGameplayStatics::DeleteGameInSlot`. Autosave on a repeating timer.
 
@@ -687,8 +725,8 @@ Wire `UMenuWidget::Continue` (enabled only if `HasSave()`); `NewGame` calls `Res
 
 ### 🧩 C++ classes & methods
 **New `UTechEffect` subclasses:** `UTechEffect_UnlockAutoSwing`, `UTechEffect_UpgradeSwingSpeed`, `UTechEffect_UnlockCrit`, `UTechEffect_UpgradeCritChance` — each writes a field on the subsystem.
-**Update `UMineEconomySubsystem`:** `bool bAutoSwing; float AutoSwingInterval=1.f; float CritChance=0; float CritMultiplier=5.f;` + an auto-swing timer that damages `CurrentRockActor`.
-**Update `ADeepDelvePlayerController::OnDig` (and auto-swing):** roll `FMath::FRand() < CritChance` → multiply damage by `CritMultiplier`; play crit sound (`UPROPERTY TObjectPtr<USoundBase> CritSound`); spawn a crit-styled damage number.
+**One swing path.** Move the manual-dig body into `ADeepDelvePlayerController::PerformSwing()` — deal `GetDamage()` to `Econ->CurrentRockActor` via `IMineable`, roll `FMath::FRand() < Econ->CritChance` → ×`Econ->CritMultiplier`, play `CritSound` (`UPROPERTY TObjectPtr<USoundBase> CritSound`), and call `ShowDamageNumber(loc, dmg, bCrit)`. `OnDig` just calls `PerformSwing()`.
+**Update `UMineEconomySubsystem`:** `bool bAutoSwing; float AutoSwingInterval=1.f; float CritChance=0; float CritMultiplier=5.f;` + an auto-swing looping timer that calls the controller's `PerformSwing()` (via `GetGameInstance()->GetFirstLocalPlayerController()`) — so manual and auto share the crit + damage-number logic and **no UI code lives in the subsystem**.
 
 ### 🔵 Blueprints / Data
 - `DA_Node_AutoSwing`, `DA_Node_SwingSpeed`, `DA_Node_CritStrike`, `DA_Node_CritChance` (`UTechNode`s). `WBP_DamageNumber` crit variant.
@@ -776,7 +814,7 @@ Make `ACoin::Collect()` **public** (already) so overlap can call it.
 | `BP_Collector` | `Reach` | Sphere, **Generate Overlap Events = true**, overlaps coins |
 
 🏁 **Milestone:** the collector auto-sweeps coins. 🧪 **Boss:** pile coins; confirm it sweeps them; buy a second collector. 🎁 **Reward:** Deeplord · +300 XP.
-💡 *Gotcha:* overlap needs **Generate Overlap Events = true on BOTH** the sphere and the coin, with responses set to overlap.
+💡 *Gotcha:* the constructor must set `PrimaryActorTick.bCanEverTick = true` (or `Tick` never runs); and overlap needs **Generate Overlap Events = true on BOTH** the sphere and the coin, with responses set to overlap.
 
 ---
 
