@@ -95,7 +95,6 @@ ADeepDelveGameMode::ADeepDelveGameMode()
 6. **Tools → New C++ Class → GameModeBase** → `DeepDelveGameMode`; paste; build. Create `BP_DeepDelveGameMode`; set it as the Default GameMode.
 
 🏁 **Milestone:** clean compile from Rider; the `Mine` scene plays through the camera with your GameMode active.
-🧪 **Boss check:** add `UE_LOG(LogTemp, Warning, TEXT("GameMode up"))` in the constructor and see it in the Output Log.
 🎁 **Reward:** Title **Prospector** · +100 XP.
 💡 **Notes & gotchas:** you need the **Synty POLYGON Dungeon Realms** as a UE project — download/unzip the pack's Unreal project first, then Migrate *from* it. With `DefaultPawnClass = nullptr` there is no pawn, so the **auto-activated Camera Actor is your only view target**; a black viewport almost always means the camera isn't set to *Auto Activate for Player 0*. Make sure the floor/rock have collision so Q3's cursor trace has something to hit.
 
@@ -163,7 +162,6 @@ Add `"EnhancedInput"` to `PublicDependencyModuleNames` in `DeepDelve.Build.cs`. 
 4. Play, click, watch the log.
 
 🏁 **Milestone:** left-click prints `Dig! 1` from C++.
-🧪 **Boss check:** set `Damage = 5` on `BP_MineController` → the log reads 5.
 🎁 **Reward:** Title **Pit Digger** · +150 XP.
 
 ---
@@ -235,7 +233,6 @@ if (GetHitResultUnderCursor(ECC_Visibility, false, Hit))
 4. Create `BP_OreVein`, assign the table, place it in the level.
 
 🏁 **Milestone:** ten clicks break the rock (with sound) and a new one appears.
-🧪 **Boss check:** set `MaxHP = 20` in the BP → it takes 20 clicks.
 🎁 **Reward:** Title stays **Pit Digger** · +200 XP.
 💡 **Notes & gotchas:** the rock needs collision the cursor trace can hit (default Synty mesh collision blocking Visibility is fine). Guard interface calls with `Implements<UMineable>()` so a mis-click on scenery is a no-op, not a crash. **Naming:** the interface method is deliberately called `MineHit`, **not** `TakeDamage` — `AActor` already has a built-in `TakeDamage`, and reusing that name causes hidden-function warnings. Every damage source (player, dwarves Q8, auto-swing Q12) calls `IMineable::Execute_MineHit`. **Sounds:** the Synty pack ships no `S_RockHit`/`S_RockBreak`; import any short SFX or use placeholders.
 
@@ -311,7 +308,6 @@ UFUNCTION() void OnDamage(FVector Where, float Amount, bool bCrit); // spawn a U
 4. Play; break rocks; collect coins.
 
 🏁 **Milestone:** break → coins burst → hover to collect → HUD climbs, Depth ticks, damage numbers float.
-🧪 **Boss check:** a coin credits exactly once and the HUD total matches.
 🎁 **Reward:** Title **Miner** · +200 XP.
 💡 **Notes & gotchas:** `BindWidget` requires the `WBP_HUD` widget names to **exactly match** the C++ members. Coins auto-clean via `SetLifeSpan`. **Create `ACoin`'s `Mesh` in the constructor (root)**, and **cache the subsystem once** (see the rule above; actors and widgets both use `GetGameInstance()`). Cursor-over on coins needs `bEnableMouseOverEvents` (set here) **and** coin collision that the cursor trace can hit. **Optimization to remember (Q17):** spawning/destroying many coins churns memory — an [Object Pool](https://gameprogrammingpatterns.com/object-pool.html) reuses them (see [UE performance considerations](https://dev.epicgames.com/documentation/en-us/unreal-engine/common-memory-and-cpu-performance-considerations-in-unreal-engine)). Consider caching the subsystem pointer instead of re-fetching it each hit.
 
@@ -370,7 +366,6 @@ UPROPERTY(BlueprintReadOnly) TObjectPtr<UPickaxeData> EquippedPickaxe;
 4. Prove it: point `RockData` at `DA_IronVein` → tougher/richer with no recompile.
 
 🏁 **Milestone:** a new rock type + pickaxe added purely as `DA_` assets.
-🧪 **Boss check:** create a third `URockData` in under two minutes and slot it in.
 🎁 **Reward:** Title stays **Miner** · +200 XP.
 💡 **Notes & gotchas:** `CurrentRockActor` is a `UPROPERTY()` `TObjectPtr` — when the rock is destroyed the GC auto-nulls it, so always guard with `IsValid(Econ->CurrentRockActor)` before using it (dwarves/auto-swing do this from Q8). Guard `Mesh->SetStaticMesh(A->Mesh)` against an unset `URockData.Mesh`, or the rock spawns invisible.
 
@@ -462,7 +457,6 @@ void UMineEconomySubsystem::SetCurrentRock(URockData* NewRock)
 6. **Wire a temporary trigger to `TryBuy`** — the quickest is a debug key: add an `IA_DebugBuy` action to `IMC_Mining`, bind it in the controller, and call `Econ->TryBuy(SomeNode)` (or use a console command). It's throwaway — Q7 replaces it with the real tech-tree UI, so remove it then. Confirm the three nodes work (descend swaps the rock); build.
 
 🏁 **Milestone:** buying the three nodes sharpens, equips, and descends to tougher/richer rock.
-🧪 **Boss check:** add a 4th node as a `DA_` + one new effect subclass — **with zero edits to any existing effect** (open/closed in action).
 🎁 **Reward:** Title **Pit Foreman** · +300 XP.
 💡 **Notes & gotchas:** mark `UTechEffect` `EditInlineNew`+`DefaultToInstanced` and the node's `Effect` `Instanced`, or you can't create effect objects inline on the Data Asset. `SetCurrentRock` needs `#include "Kismet/GameplayStatics.h"` and `#include "Camera/CameraActor.h"`, and assumes exactly one `ACameraActor` in the level (the Q1 one). ⚖️ `CostGrowth` (~1.10–1.15) sets pacing; decide a rounding rule for `Cost * CostGrowth^level` (e.g. `FMath::RoundToInt`) so costs are stable. Expose tuning values as `EditAnywhere` so you balance without recompiling; tune after the demo. **Effect contract:** write *stat* `Apply`s as an **absolute** function of `NewLevel` (e.g. `Bonus = PerLevel * NewLevel`), not `+=` — `TryBuy` calls it once with the new level and Q10's load replays stat effects once per node, so an incrementing `Apply` would restore only one level after a reload. *State* effects (`Descend`, `EquipPickaxe`) instead return `false` from `ReplayOnLoad()` and are restored from the save. **Spend via `AddCoins(-cost)`** so `OnCoinsChanged` fires and the HUD coin counter updates on purchase (a bare `Coins -= cost` won't refresh it).
 
@@ -503,7 +497,6 @@ void UMineEconomySubsystem::SetCurrentRock(URockData* NewRock)
 4. **Show the tree from the controller:** add `UPROPERTY(EditDefaultsOnly) TSubclassOf<UTechTreeWidget> TechTreeClass;` and an `IA_TechTree` input action (mapped to e.g. `T`) that creates the widget + `AddToViewport()` (and toggles/removes it on repeat). **Remove the Q6 temporary buy trigger now.** Build; buy nodes.
 
 🏁 **Milestone:** the visual tree; click affordable nodes to buy.
-🧪 **Boss check:** add the 4th node's `GridPosition`+prereq — appears wired with no layout code.
 🎁 **Reward:** Title stays **Pit Foreman** · +300 XP.
 💡 **Notes & gotchas:** node `Icon` (`UTexture2D`) can be a placeholder or a mesh-captured thumbnail (empty icons on first run are expected, not a bug). **`AllNodes` is a hand-maintained array:** from here on, every new `DA_Node_*` you create (Q8, Q12, Q13, Q14, Q15) must be added to `WBP_TechTree.AllNodes` with a `GridPosition`, or the node never appears. The `NativePaint` connector lines are optional polish — if the canvas-slot geometry is fiddly, ship the node layout first and add connectors later.
 
@@ -560,7 +553,6 @@ void Swing();
 4. Build; buy Hire Dwarf; watch it mine.
 
 🏁 **Milestone:** a hired dwarf mines hands-free.
-🧪 **Boss check:** hire two; both damage the rock independently.
 🎁 **Reward:** Title **Master Smith** · +300 XP.
 💡 **Notes & gotchas:** always `IsValid(Econ->CurrentRockActor)` before hitting it — between a rock breaking and its replacement's `BeginPlay`, the pointer is briefly null (the GC nulled the `UPROPERTY`). ⭐ *Optional:* deal damage on the exact swing frame with an [Anim Notify](https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-notifies-in-unreal-engine).
 
@@ -609,7 +601,6 @@ UFUNCTION(BlueprintCallable) void QuitGame();    // UKismetSystemLibrary::QuitGa
 4. Set Game Default Map = MainMenu; play from the menu → New Game → Esc pause.
 
 🏁 **Milestone:** title → New Game → mine; Esc pauses/returns.
-🧪 **Boss check:** New Game twice; the second run is fresh (`ResetToDefaults`).
 🎁 **Reward:** Title stays **Master Smith** · +250 XP.
 💡 **Notes & gotchas:** the GameInstance persists across `OpenLevel`, so New Game must explicitly reset it. Leave the menu's **Continue button disabled/hidden until Q10** wires `HasSave()` — its `Continue()` is a stub here. The MainMenu Level Blueprint graph (BeginPlay → Create `WBP_MainMenu` → Add to Viewport → Set Input Mode UI Only → Show Mouse Cursor) is four nodes; build it exactly. Give `WBP_PauseMenu` a **Resume** button (calls `Resume()`); pressing Esc again should do the same.
 
@@ -669,7 +660,6 @@ Wire `UMenuWidget::Continue` (enabled only if `HasSave()`) → `LoadGame` then `
 5. Test quit → relaunch → Continue.
 
 🏁 **Milestone:** relaunch → Continue → dwarves + depth restored.
-🧪 **Boss check:** delete the save; a clean first-run still works.
 🎁 **Reward:** Title stays **Master Smith** · +300 XP.
 💡 **Notes & gotchas:** bump `SaveVersion` and default missing fields on load — Q13–16 add fields and old saves must not crash. `LoadSynchronous()` is fine here; for larger projects prefer async streaming to avoid a hitch. **Load: restore state, replay only stats.** `CurrentRock`/`EquippedPickaxe` are saved directly — restore them from the soft refs and place the rock **once**; do **not** replay `Descend`/`EquipPickaxe` (they have world side effects and `NodeLevels` is an unordered `TMap`, so replaying `Descend` can land you on the wrong tier with a drifted camera and stray rocks). Replay only the **stat** effects (`ReplayOnLoad()==true`) to rebuild `PickaxeDamageBonus`/mults/crit/`bAutoSwing` — otherwise a loaded game has the right node counts but zero bonuses. **Autosave timer:** start it in the subsystem's `Initialize()`, but note `GetWorld()` can be null that early — set the timer from the first `BeginPlay` of the mine (or check `GetWorld()` first). The subsystem's hard `HiredMiners` (`TObjectPtr`, Q8) copies to the save's soft `TSoftObjectPtr` list on save and back via `LoadSynchronous` on load. **Load edges to handle:** (1) resolve saved `NodeId`s through a registry of all `UTechNode`s (e.g. an `EditDefaultsOnly TArray<TObjectPtr<UTechNode>> AllTechNodes` on the subsystem, or the Asset Manager) and **skip any id with no matching node** — renamed/deleted nodes must not crash the load; (2) **guard every `LoadSynchronous()` result for null** before using it (a moved/removed asset resolves to null); (3) on a `SaveVersion` bump, **default new fields explicitly** (an old save with no `HiredCollectors` → `0`) instead of reading uninitialised data.
 
@@ -700,7 +690,6 @@ Wire `UMenuWidget::Continue` (enabled only if `HasSave()`) → `LoadGame` then `
 4. Zip + share (Drive/WeTransfer).
 
 🏁 **Milestone:** a shippable demo runs a full play/save/quit/continue cycle outside the editor.
-🧪 **Boss check:** run it on a clean folder or another machine.
 🎁 **Reward:** Title stays **Master Smith** · +250 XP · 🎉
 💡 **Notes & gotchas:** tune the economy (`Cost`/`CostGrowth` on the tech nodes) from your friend's feedback before adding content.
 
@@ -760,7 +749,6 @@ Add `UPROPERTY(EditAnywhere) TObjectPtr<USoundBase> CritSound;` and a `FTimerHan
 4. New effect subclasses + `DA_Node_*`; build; buy them.
 
 🏁 **Milestone:** hands-free swings + flashy crits.
-🧪 **Boss check:** `CritChance = 1.0` → every hit crits.
 🎁 **Reward:** Title **Deeplord** · +300 XP.
 💡 **Notes & gotchas:** prefer a seeded `FRandomStream` over `FMath::FRand()` if you ever want reproducible runs for testing/balancing.
 
@@ -802,7 +790,6 @@ Add `UPROPERTY(EditAnywhere) TObjectPtr<USoundBase> CritSound;` and a `FTimerHan
 4. Build; buy Crew Speed with several dwarves; all speed up.
 
 🏁 **Milestone:** upgrades ramp all dwarves live.
-🧪 **Boss check:** buy Crew Speed twice with several dwarves; all visibly swing faster.
 🎁 **Reward:** Title stays **Deeplord** · +300 XP.
 💡 **Notes & gotchas:** resetting a running `SwingTimer` mid-cycle (clear + re-set on `OnCrewStatsChanged`) can cause a visible hitch or a skipped/double swing; if it bothers you, preserve elapsed time or only apply the new rate on the next tick. Remember to add `CrewSpeedMult` to `ResetToDefaults` (Q9).
 
@@ -845,7 +832,6 @@ Add `UPROPERTY(EditAnywhere) TObjectPtr<USoundBase> CritSound;` and a `FTimerHan
 4. Build; descend through tiers; confirm jackpots.
 
 🏁 **Milestone:** richer tiers + jackpot gems.
-🧪 **Boss check:** `MineralChance = 1.0`, descend a couple tiers, confirm deeper pays more.
 🎁 **Reward:** Title stays **Deeplord** · +350 XP.
 💡 **Notes & gotchas:** ⚖️ deeper tiers should raise `CoinReward` faster than `MaxHP`; keep `MineralChance` low (jackpot variance, not steady income). **Chain the new `DA_Node_Descend_*` via `Prerequisites`** (each descend requires the previous) so players can't skip tiers, and **add every new node to `WBP_TechTree.AllNodes`** with a `GridPosition`. Add `CoinMult` to `ResetToDefaults` (Q9). **Round the payout** — spawn `FMath::RoundToInt(CoinReward * Econ->CoinMult)` coins (pick round/floor once so payouts are stable). `UpgradeYield` is a stat effect (leave `ReplayOnLoad()` `true`); `AMineral` spawns are rare and stay outside the coin pool.
 
@@ -898,7 +884,6 @@ UFUNCTION() void OnReachOverlap(...);   // if (ACoin* C = Cast<ACoin>(Other)) C-
 4. New effects + `DA_Node_*`; `BP_Collector`; build.
 
 🏁 **Milestone:** the collector auto-sweeps coins.
-🧪 **Boss check:** pile coins; confirm it sweeps them; buy a second collector.
 🎁 **Reward:** Title stays **Deeplord** · +300 XP.
 💡 **Notes & gotchas:** the constructor must create the components (root + sphere) and set `PrimaryActorTick.bCanEverTick = true` (or `Tick` never runs). Bind `OnComponentBeginOverlap.AddDynamic` on **`Reach` specifically** (not the mesh). Overlap needs **Generate Overlap Events = true on BOTH** the sphere and the coin — and since coins Simulate Physics (Q4), set the coin's collision to *overlap* the collector's object type (or give the sphere a custom trace/object channel the coin overlaps), or the begin-overlap never fires. **Persist collectors:** add `int32 HiredCollectors` to `UDeepDelveSaveGame` and a loop in Q10's `RebuildWorld` that calls `SpawnCollector(CollectorClass)` that many times (bump `SaveVersion`) — without it, purchased collectors vanish after Continue. Set the patrol `LeftX`/`RightX` in `BP_Collector`'s defaults to span the coin area.
 
@@ -965,7 +950,6 @@ All are **stat/flag writers** (absolute in `NewLevel`, `ReplayOnLoad()==true`), 
 4. **Balance:** build a quick cost-vs-income table, tune `CostGrowth`/costs/amounts until minutes-per-tier is steady, then playtest to your deepest tier.
 
 🏁 **Milestone:** a broad upgrade screen and a loop with no walls or runaway spikes — a steady "just one more".
-🧪 **Boss check:** bump one node's `CostGrowth` from `1.15` to `1.30`, feel the loop stall, then put it back — proof you can read the curve.
 🎁 **Reward:** Title stays **Deeplord** · +350 XP.
 💡 **Notes & gotchas:** every new node still needs a unique `NodeId` + an `AllNodes` slot (Q6/Q7); auto-hire/auto-descend need a sane cadence (a timer, not per-frame); guard the new `bUnlock…` flags. All these effects are stat/flag writers → `ReplayOnLoad()==true`, so they restore correctly on load with no extra work.
 
@@ -1008,7 +992,6 @@ All are **stat/flag writers** (absolute in `NewLevel`, `ReplayOnLoad()==true`), 
 3. Set icon/splash/name; **Shipping** config; **Package**; test end-to-end; share.
 
 🏁 **Milestone:** a polished, playable v1.0 outside the editor, smooth even with heavy coin spawns.
-🧪 **Boss check:** the Shipping build plays the whole game with sound + effects and no frame hitches when a rich vein bursts.
 🎁 **Reward:** **Deeplord, Shaper of the Deep** · +400 XP · 🏅 QUEST LINE COMPLETE.
 
 **🎓 What to learn next:** Gameplay Ability System (GAS), replication & multiplayer, and AI / Behavior Trees.
