@@ -102,24 +102,30 @@ ADeepDelveGameMode::ADeepDelveGameMode()
 
 # QUEST 2 — The Player & Enhanced Input · ~55 min
 
-**Goal.** Create the Player Controller in C++, give it the player's `Damage` stat, and wire **Enhanced Input** in code so a left-click fires an `OnDig` handler.
+**Goal.** Create the Player Controller (input) and a **Player State** (the player's `Damage` stat) in C++, and wire **Enhanced Input** in code so a left-click fires an `OnDig` handler.
 
 📚 **Teaches:** Player Controllers, and wiring player input with the Enhanced Input system in C++.
-**Resources:** [Gameplay Framework (Controllers)](https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-framework-in-unreal-engine) · [Enhanced Input](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine) · [Programming with C++](https://dev.epicgames.com/documentation/en-us/unreal-engine/programming-with-cplusplus-in-unreal-engine) · *Further:* [Tom Looman — Unreal C++](https://tomlooman.com/)
+**Resources:** [Gameplay Framework (Controllers)](https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-framework-in-unreal-engine) · [Player Controllers](https://dev.epicgames.com/documentation/en-us/unreal-engine/player-controllers-in-unreal-engine) · [Player State (Gameplay Framework)](https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-framework-in-unreal-engine) · [Enhanced Input](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine) · *Further:* [Tom Looman — Unreal C++](https://tomlooman.com/)
 
-🎮 **After this quest:** clicking logs a "dig" from your C++ controller; `Damage` lives on the controller and is set in its Blueprint.
+🎮 **After this quest:** clicking logs a "dig" from your C++ controller; `Damage` lives on the **PlayerState** and the controller reads it via `GetPlayerState<>()`.
 
 💡 **Why:** The [**PlayerController**](https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-framework-in-unreal-engine) represents the player's *will* (input → commands) and persists independent of any pawn — the natural home for `Damage` and input. [**Enhanced Input**](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine) is UE5's data-driven, remappable input system that replaces the legacy mappings.
 
-🏛️ **Patterns & principles:** **Single Responsibility** again — input handling and player stats belong to the controller, not the GameMode or the level. Note the **forward declarations** (`class UInputMappingContext;`) in the header — declaring instead of `#include`-ing keeps compile times and header coupling down, a habit the [Coding Standard](https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine) encourages.
+🏛️ **Patterns & principles:** **Single Responsibility** — the [**PlayerController**](https://dev.epicgames.com/documentation/en-us/unreal-engine/player-controllers-in-unreal-engine) owns *input/intent* ("swing now"); a player's *stats* (`Damage`) belong on the **`APlayerState`**, which is the framework's home for player attributes. Putting a stat on the input controller mixes two responsibilities — a common smell. (In a respawn/multiplayer game `PlayerState` also survives pawn death and replicates; here it holds the player's *live* stat while the persistent progression that feeds it lives in the economy subsystem, Q4/Q5.) Note the **forward declarations** (`class UInputMappingContext;`) in the header — declaring instead of `#include`-ing keeps compile times and header coupling down, a habit the [Coding Standard](https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine) encourages.
 
 🔑 **Key nodes / functions:** `New C++ Class (PlayerController) · Build.cs: PublicDependencyModuleNames += "EnhancedInput" · ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem> · AddMappingContext · UEnhancedInputComponent::BindAction · SetInputMode(FInputModeGameAndUI) · bShowMouseCursor`
 
 ### 🧩 C++ classes & methods
-**Create `ADeepDelvePlayerController : APlayerController`.**
+**Create the stat holder — `ADeepDelvePlayerState : APlayerState`.** Player *attributes* like base `Damage` live here, **not** on the input controller.
+```cpp
+// DeepDelvePlayerState.h
+UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category="Stats") float Damage = 1.f;
+float GetDamage() const;   // Q5 re-sources this from the equipped pickaxe; Q6 adds the tech bonus
+// .cpp (Q2 version): float ADeepDelvePlayerState::GetDamage() const { return Damage; }
+```
+**Create `ADeepDelvePlayerController : APlayerController`** — *input only, holds no stats*:
 ```cpp
 // header
-UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Stats") float Damage = 1.f;
 UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<UInputMappingContext> MiningContext;
 UPROPERTY(EditDefaultsOnly, Category="Input") TObjectPtr<UInputAction> DigAction;
 virtual void BeginPlay() override;
@@ -137,7 +143,11 @@ void ADeepDelvePlayerController::SetupInputComponent(){
     if (auto* EIC = Cast<UEnhancedInputComponent>(InputComponent))
         if (DigAction) EIC->BindAction(DigAction, ETriggerEvent::Triggered, this, &ADeepDelvePlayerController::OnDig);
 }
-void ADeepDelvePlayerController::OnDig(){ UE_LOG(LogTemp, Warning, TEXT("Dig! %.0f"), Damage); } // Q3 traces + damages
+// the controller asks the PlayerState for the stat — it never stores it:
+void ADeepDelvePlayerController::OnDig(){
+    if (auto* PS = GetPlayerState<ADeepDelvePlayerState>())
+        UE_LOG(LogTemp, Warning, TEXT("Dig! %.0f"), PS->GetDamage()); // Q3 traces + damages
+}
 ```
 Add `"EnhancedInput"` to `PublicDependencyModuleNames` in `DeepDelve.Build.cs`. `MiningContext`/`DigAction` are `TObjectPtr` **`UPROPERTY`s**, so the GC keeps the assigned assets alive.
 
@@ -146,20 +156,21 @@ Add `"EnhancedInput"` to `PublicDependencyModuleNames` in `DeepDelve.Build.cs`. 
 > - **Enhanced Input must be the project default:** enable the *Enhanced Input* plugin and set **Project Settings → Engine → Input → Default Classes** to `EnhancedInputComponent` + `EnhancedPlayerInput`, or `Cast<UEnhancedInputComponent>(InputComponent)` is null and clicking logs nothing.
 
 ### 🔵 Blueprints to create
+- **`BP_DeepDelvePlayerState`** (parent `ADeepDelvePlayerState`) — set **`BP_DeepDelveGameMode` → PlayerState Class = `BP_DeepDelvePlayerState`**.
 - **`BP_MineController`** (parent `ADeepDelvePlayerController`). Create input assets **`IMC_Mining`** + **`IA_Dig`** (map `IA_Dig` → Left Mouse Button in `IMC_Mining`; add a **Pressed** trigger to `IA_Dig` so one click = one dig — without it, holding LMB fires `OnDig` every frame, i.e. hold-to-mine). Set **`BP_DeepDelveGameMode` → Player Controller Class = `BP_MineController`**.
 
-### 🎛️ UPROPERTY → values (on `BP_MineController`)
-| UPROPERTY | Assign |
-|---|---|
-| `MiningContext` | `IMC_Mining` |
-| `DigAction` | `IA_Dig` |
-| `Damage` | `1.0` |
+### 🎛️ UPROPERTY → values
+| Class | UPROPERTY | Assign |
+|---|---|---|
+| `BP_MineController` | `MiningContext` | `IMC_Mining` |
+| `BP_MineController` | `DigAction` | `IA_Dig` |
+| `BP_DeepDelvePlayerState` | `Damage` | `1.0` |
 
 ### Steps
-1. New C++ class → PlayerController → `DeepDelvePlayerController`; paste; add `EnhancedInput` to `Build.cs`; **add the Enhanced Input includes + forward declarations (above); set the Default Input Classes in Project Settings**; build.
-2. Create `IMC_Mining` + `IA_Dig`; map Left Mouse Button.
-3. Create `BP_MineController`, assign the table; point the GameMode's Player Controller Class at it.
-4. Play, click, watch the log.
+1. New C++ class → **PlayerState** → `DeepDelvePlayerState` (holds `Damage` + `GetDamage()`); New C++ class → **PlayerController** → `DeepDelvePlayerController` (input only); paste; add `EnhancedInput` to `Build.cs`; **add the Enhanced Input includes + forward declarations (above); set the Default Input Classes in Project Settings**; build.
+2. Create `IMC_Mining` + `IA_Dig`; map Left Mouse Button (with a Pressed trigger).
+3. Create `BP_DeepDelvePlayerState` + `BP_MineController`; on `BP_DeepDelveGameMode` set both **PlayerState Class** and **Player Controller Class**; assign the table.
+4. Play, click, watch the log read `Dig! 1`.
 
 🏁 **Milestone:** left-click prints `Dig! 1` from C++.
 🎁 **Reward:** Title **Pit Digger** · +150 XP.
@@ -207,8 +218,10 @@ virtual void MineHit_Implementation(float Amount) override;
 ```cpp
 FHitResult Hit;
 if (GetHitResultUnderCursor(ECC_Visibility, false, Hit))
-    if (AActor* A = Hit.GetActor()) if (A->Implements<UMineable>())
-        IMineable::Execute_MineHit(A, Damage);
+    if (AActor* A = Hit.GetActor()) if (A->Implements<UMineable>()){
+        const float Dmg = GetPlayerState<ADeepDelvePlayerState>()->GetDamage(); // stat lives on the PlayerState (Q2)
+        IMineable::Execute_MineHit(A, Dmg);
+    }
 ```
 
 > **📌 Rule from here on — components & guarding references.** Two habits every actor and quest reuses (stated once, here, where the first actor + first asset refs appear):
@@ -284,7 +297,7 @@ UFUNCTION() void OnDamage(FVector Where, float Amount, bool bCrit); // spawn a U
 ```
 **`UDamageNumberWidget : UUserWidget`** — the floating-number view (this is what `DamageNumberClass` points at). `UFUNCTION(BlueprintImplementableEvent) void Setup(float Amount, bool bCrit);` — the WBP reads `Amount`/`bCrit` to show the value and colour it (gold + bigger when `bCrit`). Without this `Setup` hook the spawned widget has no way to know what to display, so **you must add it** (the Q12 crit styling depends on it).
 **Update `AOreVein`** — `UPROPERTY(EditAnywhere) int32 CoinReward=10; UPROPERTY(EditAnywhere) TSubclassOf<ACoin> CoinClass;` **cache `Econ` in `BeginPlay`** (per the rule above — the ore vein needs it too); the break branch loops `CoinReward`→`SpawnActor<ACoin>`, then `Econ->AddDepth(1)`.
-**Update `ADeepDelvePlayerController`** — in `BeginPlay` set `bEnableMouseOverEvents=true` and create the HUD: `CreateWidget<UHUDWidget>(this, HUDClass)->AddToViewport();` (`UPROPERTY(EditDefaultsOnly) TSubclassOf<UHUDWidget> HUDClass;`) — **`AddToViewport()` is required or the HUD exists but never shows.** `OnDig` **reports** the hit: after `Execute_MineHit`, call `Econ->ReportDamage(Hit.ImpactPoint, Damage, false)` — the controller never spawns UI itself.
+**Update `ADeepDelvePlayerController`** — in `BeginPlay` set `bEnableMouseOverEvents=true` and create the HUD: `CreateWidget<UHUDWidget>(this, HUDClass)->AddToViewport();` (`UPROPERTY(EditDefaultsOnly) TSubclassOf<UHUDWidget> HUDClass;`) — **`AddToViewport()` is required or the HUD exists but never shows.** `OnDig` **reports** the hit: after `Execute_MineHit(A, Dmg)`, call `Econ->ReportDamage(Hit.ImpactPoint, Dmg, false)` (`Dmg` from the PlayerState's `GetDamage()`, Q2) — the controller never spawns UI itself.
 
 > **Build.cs:** the first `UUserWidget` (`UHUDWidget`) means adding **`"UMG"`, `"Slate"`, `"SlateCore"`** to `PublicDependencyModuleNames` — or nothing UMG-related compiles.
 
@@ -349,7 +362,8 @@ UPROPERTY() TSubclassOf<AOreVein> OreVeinClass;
 UPROPERTY() FTransform LastRockTransform;
 UPROPERTY(BlueprintReadOnly) TObjectPtr<UPickaxeData> EquippedPickaxe;
 ```
-**Update `ADeepDelvePlayerController`:** `UPROPERTY(EditDefaultsOnly) TObjectPtr<UPickaxeData> DefaultPickaxe;` + `float GetDamage() const;` (= `Econ->EquippedPickaxe->Damage`; Q6 adds `+ Econ->PickaxeDamageBonus`). In `BeginPlay`: `if(!Econ->EquippedPickaxe) Econ->EquippedPickaxe=DefaultPickaxe;` `OnDig` sends `GetDamage()`. **Guard `GetDamage()`** — `return Econ->EquippedPickaxe ? Econ->EquippedPickaxe->Damage : 0.f;` — so an unassigned `DefaultPickaxe` returns 0 instead of crashing.
+**Update `ADeepDelvePlayerController`:** `UPROPERTY(EditDefaultsOnly) TObjectPtr<UPickaxeData> DefaultPickaxe;`. In `BeginPlay`, seed the subsystem once: `if(!Econ->EquippedPickaxe) Econ->EquippedPickaxe=DefaultPickaxe;`. `OnDig` already asks the PlayerState (`GetPlayerState<ADeepDelvePlayerState>()->GetDamage()`, Q2).
+**Move the damage calc onto `ADeepDelvePlayerState::GetDamage()`** — it now *derives* from progression instead of a stored value: `return Econ->EquippedPickaxe ? Econ->EquippedPickaxe->Damage : 0.f;` (Q6 adds `+ Econ->PickaxeDamageBonus`). The starter `Damage` field from Q2 is superseded by the equipped pickaxe — delete it (or keep as an unarmed fallback). `APlayerState` is an actor, so it reaches the subsystem the usual way (cache `Econ` in its `BeginPlay`). This keeps the layering clean: **controller = input → PlayerState = the player's live stats → subsystem = persistent progression.**
 
 ### 🔵 Data Assets & Blueprint values
 - `DA_CopperVein` (`URockData`: 10/10), `DA_IronVein` (25/30), `DA_StonePick` (`UPickaxeData`: Damage 1), `DA_SturdyPick` (Damage 3).
@@ -422,7 +436,7 @@ UFUNCTION(BlueprintCallable) bool  CanBuy(UTechNode* Node) const;    // prereqs 
 UFUNCTION(BlueprintCallable) bool  TryBuy(UTechNode* Node);          // AddCoins(-cost) [broadcasts OnCoinsChanged→HUD], ++level, Effect->Apply(this, level), OnTechChanged.Broadcast()
 UFUNCTION() void SetCurrentRock(URockData* NewRock);                 // called by UTechEffect_Descend
 ```
-`GetDamage()` (on the controller) now returns `EquippedPickaxe->Damage + PickaxeDamageBonus`.
+`GetDamage()` (on the **`ADeepDelvePlayerState`**, Q2/Q5) now returns `EquippedPickaxe->Damage + PickaxeDamageBonus`.
 
 **`SetCurrentRock` makes descending actually change the rock** — guard the actor pointer:
 ```cpp
@@ -718,7 +732,7 @@ Wire `UMenuWidget::Continue` (enabled only if `HasSave()`) → `LoadGame` then `
 ```cpp
 void ADeepDelvePlayerController::PerformSwing(){
     AActor* R = Econ->CurrentRockActor; if (!IsValid(R)) return;
-    float Dmg = GetDamage();
+    auto* PS = GetPlayerState<ADeepDelvePlayerState>(); float Dmg = PS ? PS->GetDamage() : 0.f;  // stat on PlayerState (Q2)
     const bool bCrit = FMath::FRand() < Econ->CritChance;   // FRandomStream if you want reproducibility
     if (bCrit){ Dmg *= Econ->CritMultiplier; if (CritSound) UGameplayStatics::PlaySound2D(this, CritSound); }
     IMineable::Execute_MineHit(R, Dmg);
