@@ -96,7 +96,7 @@ ADeepDelveGameMode::ADeepDelveGameMode()
 
 🏁 **Milestone:** clean compile from Rider; the `Mine` scene plays through the camera with your GameMode active.
 🎁 **Reward:** Title **Prospector** · +100 XP.
-💡 **Notes & gotchas:** you need the **Synty POLYGON Dungeon Realms** as a UE project — download/unzip the pack's Unreal project first, then Migrate *from* it. With `DefaultPawnClass = nullptr` there is no pawn, so the **auto-activated Camera Actor is your only view target**; a black viewport almost always means the camera isn't set to *Auto Activate for Player 0*. Make sure the floor/rock have collision so Q3's cursor trace has something to hit.
+💡 **Notes & gotchas:** you need the **Synty POLYGON Dungeon Realms** as a UE project — download/unzip the pack's Unreal project first, then Migrate *from* it. With `DefaultPawnClass = nullptr` there is no pawn, so the **auto-activated Camera Actor is your only view target**; a black viewport almost always means the camera isn't set to *Auto Activate for Player 0*. Make sure the floor/rock have collision so Q3's cursor trace has something to hit. 🗂️ **Organize by feature, not by asset type** — group content as `Mining/`, `Crew/`, `Economy/`, `UI/` (by game domain) rather than `Meshes/`, `Textures/`, `Blueprints/`; feature-based layout scales far better (Architecture Study Guide §8).
 
 ---
 
@@ -109,7 +109,7 @@ ADeepDelveGameMode::ADeepDelveGameMode()
 
 🎮 **After this quest:** clicking logs a "dig" from your C++ controller; `Damage` lives on the **PlayerState** and the controller reads it via `GetPlayerState<>()`.
 
-💡 **Why:** The [**PlayerController**](https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-framework-in-unreal-engine) represents the player's *will* (input → commands) and persists independent of any pawn — the natural home for `Damage` and input. [**Enhanced Input**](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine) is UE5's data-driven, remappable input system that replaces the legacy mappings.
+💡 **Why:** The [**PlayerController**](https://dev.epicgames.com/documentation/en-us/unreal-engine/player-controllers-in-unreal-engine) represents the player's *will* (input → commands) and persists independent of any pawn — the natural home for **input**, but **not** for stats. A player *stat* like `Damage` is an attribute of the player, not of input handling, so it belongs on the [**`APlayerState`**](https://dev.epicgames.com/documentation/en-us/unreal-engine/gameplay-framework-in-unreal-engine) (Unreal's home for player attributes); the controller just *reads* it when it acts. [**Enhanced Input**](https://dev.epicgames.com/documentation/en-us/unreal-engine/enhanced-input-in-unreal-engine) is UE5's data-driven, remappable input system that replaces the legacy mappings.
 
 🏛️ **Patterns & principles:** **Single Responsibility** — the [**PlayerController**](https://dev.epicgames.com/documentation/en-us/unreal-engine/player-controllers-in-unreal-engine) owns *input/intent* ("swing now"); a player's *stats* (`Damage`) belong on the **`APlayerState`**, which is the framework's home for player attributes. Putting a stat on the input controller mixes two responsibilities — a common smell. (In a respawn/multiplayer game `PlayerState` also survives pawn death and replicates; here it holds the player's *live* stat while the persistent progression that feeds it lives in the economy subsystem, Q4/Q5.) Note the **forward declarations** (`class UInputMappingContext;`) in the header — declaring instead of `#include`-ing keeps compile times and header coupling down, a habit the [Coding Standard](https://dev.epicgames.com/documentation/en-us/unreal-engine/epic-cplusplus-coding-standard-for-unreal-engine) encourages.
 
@@ -322,7 +322,7 @@ UFUNCTION() void OnDamage(FVector Where, float Amount, bool bCrit); // spawn a U
 
 🏁 **Milestone:** break → coins burst → hover to collect → HUD climbs, Depth ticks, damage numbers float.
 🎁 **Reward:** Title **Miner** · +200 XP.
-💡 **Notes & gotchas:** `BindWidget` requires the `WBP_HUD` widget names to **exactly match** the C++ members. Coins auto-clean via `SetLifeSpan`. **Create `ACoin`'s `Mesh` in the constructor (root)**, and **cache the subsystem once** (see the rule above; actors and widgets both use `GetGameInstance()`). Cursor-over on coins needs `bEnableMouseOverEvents` (set here) **and** coin collision that the cursor trace can hit. **Optimization to remember (Q17):** spawning/destroying many coins churns memory — an [Object Pool](https://gameprogrammingpatterns.com/object-pool.html) reuses them (see [UE performance considerations](https://dev.epicgames.com/documentation/en-us/unreal-engine/common-memory-and-cpu-performance-considerations-in-unreal-engine)). Consider caching the subsystem pointer instead of re-fetching it each hit.
+💡 **Notes & gotchas:** `BindWidget` requires the `WBP_HUD` widget names to **exactly match** the C++ members. Coins auto-clean via `SetLifeSpan`. **Create `ACoin`'s `Mesh` in the constructor (root)**, and **cache the subsystem once** (see the rule above; actors and widgets both use `GetGameInstance()`). Cursor-over on coins needs `bEnableMouseOverEvents` (set here) **and** coin collision that the cursor trace can hit. **Optimization to remember (Q17):** spawning/destroying many coins churns memory — an [Object Pool](https://gameprogrammingpatterns.com/object-pool.html) reuses them (see [UE performance considerations](https://dev.epicgames.com/documentation/en-us/unreal-engine/common-memory-and-cpu-performance-considerations-in-unreal-engine)). Consider caching the subsystem pointer instead of re-fetching it each hit. 🏛️ **Architecture note:** this subsystem is your **single source of truth** — idiomatic and correct here — but mind its scope: as it later also spawns actors (Q6/Q8/Q15), saves (Q10), and pools coins (Q17), it trends toward a *god object*. Fine for a solo game; in a bigger one you'd split it into a **progression/state** subsystem, a world-scoped **spawn director** (a `UWorldSubsystem` or actor), and a **SaveManager** (Architecture Study Guide §7/§9).
 
 ---
 
@@ -418,7 +418,7 @@ public:
 ```
 **Subclasses:** `UTechEffect_UpgradePickaxeDamage` (`float AmountPerLevel=1;` → `Econ->PickaxeDamageBonus = AmountPerLevel * NewLevel`); `UTechEffect_EquipPickaxe` (`UPROPERTY(EditAnywhere) TObjectPtr<UPickaxeData> Pickaxe;` → `Econ->EquippedPickaxe = Pickaxe`); `UTechEffect_Descend` (`UPROPERTY(EditAnywhere) TObjectPtr<URockData> NextRock;` → `Econ->SetCurrentRock(NextRock)`).
 
-**Two kinds of effect:** *stat* effects (like `UpgradePickaxeDamage`) write an **absolute** value from `NewLevel` (never `+=`) so they're correct on purchase *and* when replayed on load — leave `ReplayOnLoad()` `true`. *State / side-effecting* effects — **`EquipPickaxe`** (sets the equipped pickaxe) and **`Descend`** (destroys/spawns the rock actor and moves the camera) — **override `ReplayOnLoad()` to return `false`**: replaying them on load would repeat the side effects and, because `NodeLevels` is an unordered `TMap`, could land you on the wrong tier. The save restores `CurrentRock`/`EquippedPickaxe` directly instead (Q10).
+**Two kinds of effect:** *stat* effects (like `UpgradePickaxeDamage`) write an **absolute** value from `NewLevel` (never `+=`) so they're correct on purchase *and* when replayed on load — leave `ReplayOnLoad()` `true`. *State / side-effecting* effects — **`EquipPickaxe`** (sets the equipped pickaxe) and **`Descend`** (destroys/spawns the rock actor and broadcasts `OnDescended`) — **override `ReplayOnLoad()` to return `false`**: replaying them on load would repeat the side effects and, because `NodeLevels` is an unordered `TMap`, could land you on the wrong tier. The save restores `CurrentRock`/`EquippedPickaxe` directly instead (Q10).
 **`UTechNode : UPrimaryDataAsset`** — `FName NodeId; FText DisplayName, Description; TObjectPtr<UTexture2D> Icon; int32 Cost=10; float CostGrowth=1.15f; bool bRepeatable=false; int32 MaxLevel=1; TArray<TObjectPtr<UTechNode>> Prerequisites; FVector2D GridPosition; UPROPERTY(Instanced) TObjectPtr<UTechEffect> Effect;` (all `UPROPERTY(EditAnywhere)`).
 - ⚠️ **`NodeId` must be unique per asset** — it's the key for `NodeLevels` (and the save, Q10). Leave it `None` and *every* node shares one counter, so buying one node marks the others owned and their prereqs pass spuriously. (Alternatively key `NodeLevels` by the node's `FPrimaryAssetId`/asset path instead of a hand-set `FName`.)
 - ⚠️ **`bRepeatable` nodes ignore `MaxLevel`** (buy indefinitely); only non-repeatable nodes are capped by `MaxLevel` (default `1`). Otherwise a repeatable upgrade maxes out after one purchase because `MaxLevel` defaults to `1`.
@@ -426,9 +426,11 @@ public:
 ```cpp
 UPROPERTY() TMap<FName,int32> NodeLevels;
 UPROPERTY(BlueprintReadOnly) float PickaxeDamageBonus = 0.f;   // UpgradePickaxeDamage adds here
-UPROPERTY(EditAnywhere) float DescendCameraStep = 150.f;       // tunable in the subsystem's config
+UPROPERTY(EditAnywhere) float DescendCameraStep = 150.f;       // read by the camera *listener*, not the subsystem
 DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnTechChanged);
 UPROPERTY(BlueprintAssignable) FOnTechChanged OnTechChanged;
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDescended);
+UPROPERTY(BlueprintAssignable) FOnDescended OnDescended;        // Observer: a camera/view listener reacts to a descend
 
 UFUNCTION(BlueprintCallable) int32 GetNodeLevel(UTechNode* Node) const; // NodeLevels.FindRef(Node->NodeId)
 UFUNCTION(BlueprintCallable) int32 GetCost(UTechNode* Node) const;   // Cost * CostGrowth^level
@@ -446,8 +448,7 @@ void UMineEconomySubsystem::SetCurrentRock(URockData* NewRock)
     const FTransform Where = LastRockTransform;
     if (IsValid(CurrentRockActor)) CurrentRockActor->Destroy();     // guarded; GC nulls it after
     GetWorld()->SpawnActor<AOreVein>(OreVeinClass, Where);          // new rock reads CurrentRock in BeginPlay
-    if (AActor* Cam = UGameplayStatics::GetActorOfClass(this, ACameraActor::StaticClass()))
-        Cam->AddActorWorldOffset(FVector(0, 0, -DescendCameraStep));
+    OnDescended.Broadcast();   // report the fact; a camera listener moves the view (the subsystem never touches the camera)
 }
 ```
 
@@ -472,7 +473,7 @@ void UMineEconomySubsystem::SetCurrentRock(URockData* NewRock)
 
 🏁 **Milestone:** buying the three nodes sharpens, equips, and descends to tougher/richer rock.
 🎁 **Reward:** Title **Pit Foreman** · +300 XP.
-💡 **Notes & gotchas:** mark `UTechEffect` `EditInlineNew`+`DefaultToInstanced` and the node's `Effect` `Instanced`, or you can't create effect objects inline on the Data Asset. `SetCurrentRock` needs `#include "Kismet/GameplayStatics.h"` and `#include "Camera/CameraActor.h"`, and assumes exactly one `ACameraActor` in the level (the Q1 one). ⚖️ `CostGrowth` (~1.10–1.15) sets pacing; decide a rounding rule for `Cost * CostGrowth^level` (e.g. `FMath::RoundToInt`) so costs are stable. Expose tuning values as `EditAnywhere` so you balance without recompiling; tune after the demo. **Effect contract:** write *stat* `Apply`s as an **absolute** function of `NewLevel` (e.g. `Bonus = PerLevel * NewLevel`), not `+=` — `TryBuy` calls it once with the new level and Q10's load replays stat effects once per node, so an incrementing `Apply` would restore only one level after a reload. *State* effects (`Descend`, `EquipPickaxe`) instead return `false` from `ReplayOnLoad()` and are restored from the save. **Spend via `AddCoins(-cost)`** so `OnCoinsChanged` fires and the HUD coin counter updates on purchase (a bare `Coins -= cost` won't refresh it).
+💡 **Notes & gotchas:** mark `UTechEffect` `EditInlineNew`+`DefaultToInstanced` and the node's `Effect` `Instanced`, or you can't create effect objects inline on the Data Asset. `SetCurrentRock` **broadcasts `OnDescended`** instead of touching the camera — subscribe a listener (the controller, or a small camera actor) and, on `OnDescended`, nudge the Q1 camera down by `DescendCameraStep`. This keeps the rule *gameplay reports facts, views react* (Observer), so the subsystem needs no camera include and makes no "one camera" assumption. ⚖️ `CostGrowth` (~1.10–1.15) sets pacing; decide a rounding rule for `Cost * CostGrowth^level` (e.g. `FMath::RoundToInt`) so costs are stable. Expose tuning values as `EditAnywhere` so you balance without recompiling; tune after the demo. **Effect contract:** write *stat* `Apply`s as an **absolute** function of `NewLevel` (e.g. `Bonus = PerLevel * NewLevel`), not `+=` — `TryBuy` calls it once with the new level and Q10's load replays stat effects once per node, so an incrementing `Apply` would restore only one level after a reload. *State* effects (`Descend`, `EquipPickaxe`) instead return `false` from `ReplayOnLoad()` and are restored from the save. **Spend via `AddCoins(-cost)`** so `OnCoinsChanged` fires and the HUD coin counter updates on purchase (a bare `Coins -= cost` won't refresh it). 🏛️ **Scaling note:** `UTechEffect` + the subsystem's bonus fields are a *hand-rolled mini attribute/effect system*. In a larger game these graduate to the **Gameplay Ability System** — attributes on a `UAttributeSet`, changes applied through `GameplayEffect`s (see the Architecture Study Guide §9). Overkill for this scope, but the natural next step.
 
 ---
 
@@ -568,7 +569,7 @@ void Swing();
 
 🏁 **Milestone:** a hired dwarf mines hands-free.
 🎁 **Reward:** Title **Master Smith** · +300 XP.
-💡 **Notes & gotchas:** always `IsValid(Econ->CurrentRockActor)` before hitting it — between a rock breaking and its replacement's `BeginPlay`, the pointer is briefly null (the GC nulled the `UPROPERTY`). ⭐ *Optional:* deal damage on the exact swing frame with an [Anim Notify](https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-notifies-in-unreal-engine).
+💡 **Notes & gotchas:** always `IsValid(Econ->CurrentRockActor)` before hitting it — between a rock breaking and its replacement's `BeginPlay`, the pointer is briefly null (the GC nulled the `UPROPERTY`). ⭐ *Optional:* deal damage on the exact swing frame with an [Anim Notify](https://dev.epicgames.com/documentation/en-us/unreal-engine/animation-notifies-in-unreal-engine). 🏛️ Spawning from a `GameInstance` subsystem (`SpawnDwarf`, plus rock/collector spawns) works but is off-grain — spawning is world-scoped; in a larger project move it to a `UWorldSubsystem` or a small director actor (Architecture Study Guide §9).
 
 ---
 
